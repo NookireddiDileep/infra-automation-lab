@@ -1,0 +1,30 @@
+# secrets / cluster access — never commit
+kubeconfig*
+*.kubeconfig
+.kube/
+.vault_pass*
+*.pem
+*.key
+.env
+
+# python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+*.egg-info/
+
+# go
+bin/
+*.test
+
+# ansible
+*.retry
+
+# editors / OS / obsidian
+.obsidian/workspace*
+.DS_Store
+*.swp
+*.bak

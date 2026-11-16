@@ -61,4 +61,4 @@ done < file.txt
 
 ## 7. Revise later
 - [ ] Answer the mini-challenge: what does the counter print after `cat test.txt | while read`?
-- [ ] Do the OCP angle on the J2C lab
+- [ ] Do the OCP angle on the OpenShift training lab

@@ -110,7 +110,7 @@ ansible-playbook disk_triage.yml -e triage_become=true           # snapshots/<ho
 
 ## 5. Run it for real
 
-**GCP RHEL VM or the J2C lab bastion** (reproduce the incident safely on a small test LV or a loop device, never on `/`):
+**GCP RHEL VM or the OpenShift training lab bastion** (reproduce the incident safely on a small test LV or a loop device, never on `/`):
 
 ```bash
 sudo dd if=/dev/zero of=/var/tmp/fill.img bs=1M count=0 seek=2048 && sudo mkfs.xfs -q /var/tmp/fill.img
@@ -123,7 +123,7 @@ sudo bash/disktriage.sh snapshot -o /tmp/me.snap && bash/disktriage.sh report /t
 # fix it without killing the process:  sudo truncate -s 0 /proc/<PID>/fd/9   → re-run: OK
 ```
 
-**OpenShift (J2C lab):** the same thing happens inside nodes when container logs or `emptyDir` fill `/var/lib/containers` or `/var/lib/kubelet`. Kubelet then sets `DiskPressure` and starts evicting pods. Look at it with `oc debug node/<node> -- chroot /host df -h /var` and `crictl ps` (Day 19 covers node pressure properly).
+**OpenShift (training lab):** the same thing happens inside nodes when container logs or `emptyDir` fill `/var/lib/containers` or `/var/lib/kubelet`. Kubelet then sets `DiskPressure` and starts evicting pods. Look at it with `oc debug node/<node> -- chroot /host df -h /var` and `crictl ps` (Day 19 covers node pressure properly).
 
 **kind (AROHAN clusters):** `docker exec -it <cluster>-worker bash`, then copy `bash/disktriage.sh` in with `docker cp` and run it there. Nodes are containers, so you'll see `overlay` filesystems being skipped: that's the fstype filter working.
 

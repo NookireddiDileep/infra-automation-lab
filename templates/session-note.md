@@ -31,7 +31,7 @@ status: done | partial | #revise
 - 
 
 ## 5. OCP / real-world angle
-<!-- Where would I use this at work? Link to a T-Systems incident or OpenShift task. -->
+<!-- Where would I use this at work? Link to a real (anonymised) incident or OpenShift task. -->
 - 
 
 ## 6. Interview questions  #interview

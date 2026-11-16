@@ -11,3 +11,4 @@ One line per trap: **symptom → cause → fix** (week/day). Reread every Saturd
 | ERR trap fires after a function `return 2` | Non-zero return trips `set -e`/ERR in the caller | Return status through a global (or call it as `f \|\| rc=$?`) | Daily 001 |
 | Go output order changes between runs | Map iteration is random | `sort.Strings` before printing | Daily 001 |
 | Ansible `join('\n')` gives one line with a literal `\n` | Ansible's templating keeps backslashes in Jinja string literals as-is | Define `nl: "\n"` in YAML double quotes and use `join(nl)` | Daily 001 |
+| Drift check flags a service as "missing" though nothing broke | On-demand (socket/D-Bus activated) units exit when idle | Allow-list transient units, or compare only `enabled` services | Daily 001 |

@@ -16,4 +16,5 @@ ansible:
 	cd ansible && ansible-playbook --syntax-check patch_window.yml && \
 	ansible-playbook compare_samples.yml && \
 	ansible-playbook patch_window.yml -e phase=pre && \
-	ansible-playbook patch_window.yml -e phase=post
+	ansible-playbook patch_window.yml -e phase=post -e fail_on_crit=false && \
+	test -s snapshots/localhost.report

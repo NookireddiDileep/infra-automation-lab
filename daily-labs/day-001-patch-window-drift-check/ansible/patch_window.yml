@@ -1,0 +1,73 @@
+---
+# Patch-window drift check across a fleet.
+#   ansible-playbook patch_window.yml -e phase=pre                      # before patching
+#   ... patch + reboot (your patching playbook / dnf update) ...
+#   ansible-playbook patch_window.yml -e phase=post                     # after: report, fail hosts with CRIT drift
+#   ansible-playbook patch_window.yml -e phase=post -e patch_batch=10%  # rolling: stop the rollout on the first bad batch
+- name: Patch-window drift check
+  hosts: patch_targets
+  gather_facts: true
+  serial: "{{ patch_batch | default('100%') }}"
+  max_fail_percentage: 0
+  vars:
+    phase: pre
+    snapshot_dir: "{{ playbook_dir }}/snapshots"
+    fs_warn_pct: 90
+    patchcheck_fstypes: [xfs, ext4, ext3, btrfs, vfat, nfs, nfs4]
+
+  tasks:
+    - name: Check phase
+      ansible.builtin.assert:
+        that: phase in ['pre', 'post']
+        fail_msg: "use -e phase=pre or -e phase=post"
+        quiet: true
+
+    - name: Collect running services
+      ansible.builtin.service_facts:
+
+    - name: Collect listening TCP ports
+      ansible.builtin.command: ss -Htln
+      register: ss_out
+      changed_when: false
+
+    - name: Ensure the snapshot directory exists on the controller
+      ansible.builtin.file:
+        path: "{{ snapshot_dir }}"
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Write the snapshot to the controller
+      ansible.builtin.template:
+        src: templates/snapshot.j2
+        dest: "{{ snapshot_dir }}/{{ inventory_hostname }}-{{ phase }}.txt"
+        mode: "0644"
+      delegate_to: localhost
+      vars:
+        ss_lines: "{{ ss_out.stdout_lines }}"
+
+    - name: Compare with the pre-patch snapshot
+      when: phase == 'post'
+      block:
+        - name: Run the comparison
+          ansible.builtin.include_tasks: tasks/compare.yml
+          vars:
+            pre_text: "{{ lookup('ansible.builtin.file', snapshot_dir ~ '/' ~ inventory_hostname ~ '-pre.txt') }}"
+            post_text: "{{ lookup('ansible.builtin.file', snapshot_dir ~ '/' ~ inventory_hostname ~ '-post.txt') }}"
+
+        - name: Save the report on the controller
+          ansible.builtin.copy:
+            content: "{{ report_text }}\n"
+            dest: "{{ snapshot_dir }}/{{ inventory_hostname }}.report"
+            mode: "0644"
+          delegate_to: localhost
+
+        - name: Show the report
+          ansible.builtin.debug:
+            var: report_lines
+
+        - name: Stop the rollout on critical drift
+          ansible.builtin.fail:
+            msg: "{{ inventory_hostname }}: critical drift after patching, see {{ snapshot_dir }}/{{ inventory_hostname }}.report"
+          when: report_result == 'CRIT'

@@ -18,3 +18,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
 
 ## Scenario stories (STAR) — link scripts to real work
 <!-- e.g. "During DR drills at T-Systems I checked reachability of N hosts by hand; I'd now script it like ping_check.sh, which cuts the check from X min to Y sec." -->
+
+## Daily labs
+- **How do you verify a patch window beyond "it pings"?** (Daily 001)  
+  Snapshot mounts, listening ports, running services and kernel before and after, then diff them. Anything missing is CRIT and fails the change; new items and full disks are WARN. In Ansible, use `serial` + `max_fail_percentage: 0` so a bad batch stops the rollout.
+- **Bash vs Ansible vs Python vs Go for the same job?** (Daily 001)  
+  Bash for one host with no dependencies. Ansible for fleet collection and gating. Python for tested logic and JSON. Go for a static binary and concurrent fleet processing.

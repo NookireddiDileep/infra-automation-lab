@@ -28,3 +28,6 @@ bin/
 .DS_Store
 *.swp
 *.bak
+
+# daily-labs runtime output
+daily-labs/**/snapshots/

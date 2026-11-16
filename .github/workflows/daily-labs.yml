@@ -1,0 +1,28 @@
+name: daily-labs
+
+on:
+  push:
+    paths: ["daily-labs/**", ".github/workflows/daily-labs.yml"]
+  pull_request:
+    paths: ["daily-labs/**", ".github/workflows/daily-labs.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Install pytest and ansible-core
+        run: pip install pytest ansible-core
+      - name: Run every day's four implementations
+        run: |
+          for d in daily-labs/day-*/; do
+            echo "::group::$d"
+            make -C "$d" test
+            echo "::endgroup::"
+          done

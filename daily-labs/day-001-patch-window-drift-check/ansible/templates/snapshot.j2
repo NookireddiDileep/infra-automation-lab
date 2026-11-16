@@ -1,0 +1,26 @@
+# patchcheck snapshot v1
+# host={{ inventory_hostname }} taken={{ ansible_facts.date_time.iso8601 }}
+kernel {{ ansible_facts.kernel }}
+{% set ns = namespace(items=[], fs=[]) %}
+{% for m in ansible_facts.mounts if m.fstype in patchcheck_fstypes %}
+{% set ns.items = ns.items + ['mount ' ~ m.mount ~ ' ' ~ m.fstype] %}
+{% set used = m.block_used | default(0) | int %}
+{% set avail = m.block_available | default(0) | int %}
+{% if used + avail > 0 %}
+{% set ns.fs = ns.fs + ['fsuse ' ~ m.mount ~ ' ' ~ ((used * 100 + used + avail - 1) // (used + avail))] %}
+{% endif %}
+{% endfor %}
+{% for line in ss_lines if line.split() | length > 3 %}
+{% set ns.items = ns.items + ['port tcp/' ~ line.split()[3].rsplit(':', 1)[1]] %}
+{% endfor %}
+{% for svc in ansible_facts.services | default({}) | dict2items
+     | selectattr('value.state', 'equalto', 'running')
+     | selectattr('value.source', 'equalto', 'systemd') | map(attribute='key') %}
+{% set ns.items = ns.items + ['service ' ~ svc] %}
+{% endfor %}
+{% for item in ns.items | unique | sort %}
+{{ item }}
+{% endfor %}
+{% for f in ns.fs | unique | sort %}
+{{ f }}
+{% endfor %}

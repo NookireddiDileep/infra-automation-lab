@@ -1,0 +1,6 @@
+patchcheck report: node-03
+INFO kernel unchanged 5.14.0-427.13.1.el9_4.x86_64
+WARN new service podman.service
+WARN fs /var at 95% (>= 90%)
+WARN fs /var/log at 91% (>= 90%)
+RESULT WARN crit=0 warn=3

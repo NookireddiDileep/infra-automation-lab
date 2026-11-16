@@ -1,8 +1,8 @@
 # patchcheck snapshot v1
-# host={{ inventory_hostname }} taken={{ ansible_date_time.iso8601 }}
-kernel {{ ansible_kernel }}
+# host={{ inventory_hostname }} taken={{ ansible_facts.date_time.iso8601 }}
+kernel {{ ansible_facts.kernel }}
 {% set ns = namespace(items=[], fs=[]) %}
-{% for m in ansible_mounts if m.fstype in patchcheck_fstypes %}
+{% for m in ansible_facts.mounts if m.fstype in patchcheck_fstypes %}
 {% set ns.items = ns.items + ['mount ' ~ m.mount ~ ' ' ~ m.fstype] %}
 {% set used = m.block_used | default(0) | int %}
 {% set avail = m.block_available | default(0) | int %}

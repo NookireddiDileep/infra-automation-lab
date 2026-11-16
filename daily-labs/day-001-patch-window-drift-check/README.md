@@ -55,7 +55,7 @@ RESULT CRIT crit=3 warn=2
 | | Bash `bash/patchcheck.sh` | Ansible `ansible/` | Python `python/patchcheck.py` | Go `go/` |
 |---|---|---|---|---|
 | Best at | one host, zero dependencies, cron/systemd timer | **fleet**: collect from N hosts, gate a rolling patch | tested logic, **JSON** for tickets/dashboards | one static binary, **concurrent** fleet compare |
-| Collects data via | `/proc/mounts`, `ss` (fallback `/proc/net/tcp`), `systemctl`, `df` | facts: `ansible_mounts`, `service_facts`, `ss` | `/proc/*`, `os.statvfs`, `subprocess` | `/proc/*`, `syscall.Statfs`, `os/exec` |
+| Collects data via | `/proc/mounts`, `ss` (fallback `/proc/net/tcp`), `systemctl`, `df` | facts: `ansible_facts.mounts`, `service_facts`, `ss` | `/proc/*`, `os.statvfs`, `subprocess` | `/proc/*`, `syscall.Statfs`, `os/exec` |
 | Set difference | `comm -23` / `comm -13` on sorted input | `difference` filter | `set - set` | map lookups |
 | Extra | ERR trap, strict mode | `serial` + `max_fail_percentage: 0` stops a bad rollout | `--json`, 10 pytest tests | `fleet DIR -j N` worker pool |
 | Test | `bash/test.sh` | `compare_samples.yml` | `pytest` | `go test` |

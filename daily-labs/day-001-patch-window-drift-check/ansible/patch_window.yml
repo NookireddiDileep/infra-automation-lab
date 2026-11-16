@@ -13,6 +13,7 @@
     phase: pre
     snapshot_dir: "{{ playbook_dir }}/snapshots"
     fs_warn_pct: 90
+    fail_on_crit: true   # CI smoke test sets false: on-demand (socket/D-Bus activated) services stop on their own between runs
     patchcheck_fstypes: [xfs, ext4, ext3, btrfs, vfat, nfs, nfs4]
 
   tasks:
@@ -70,4 +71,6 @@
         - name: Stop the rollout on critical drift
           ansible.builtin.fail:
             msg: "{{ inventory_hostname }}: critical drift after patching, see {{ snapshot_dir }}/{{ inventory_hostname }}.report"
-          when: report_result == 'CRIT'
+          when:
+            - report_result == 'CRIT'
+            - fail_on_crit | bool

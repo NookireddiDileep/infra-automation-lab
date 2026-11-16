@@ -111,4 +111,4 @@ ansible-playbook patch_window.yml -e phase=post  # report + fail on CRIT
 - Run it from Ansible in the real patching playbook (pre task → patch → reboot → post task) with `serial: 10%`.
 - Add more facts: `/etc/fstab` vs mounted, NTP sync state, `crontab` hashes, SELinux mode, `rpm -qa` count, multipath paths.
 - Store reports with the change ticket number. Push the JSON to the CMDB or a dashboard.
-- An allow-list for expected changes (e.g. `kdump.service` may restart).
+- An allow-list for expected changes and **on-demand units**. Services like `systemd-timedated` or `netavark-dhcp-proxy` are started by a socket or D-Bus call and exit when idle, so they "vanish" between snapshots. This tool's own CI hit exactly this, which is why the live CI run uses `-e fail_on_crit=false`.

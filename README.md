@@ -30,6 +30,7 @@ See **[ROADMAP.md](ROADMAP.md)** for the week-by-week plan and the exit criteria
 02-ansible/    inventories, playbooks, roles
 03-python/     tools/ with tests
 04-go/         CLI plugin, operator
+daily-labs/    one scenario a day, solved in all four tools with shared golden tests
 capstones/     one end-to-end project per tool, written up like a design doc
 notes/         GOTCHAS.md (traps I hit) · INTERVIEW-BANK.md (Q&A for revision)
 templates/     session-note.md · project-readme.md
@@ -57,4 +58,5 @@ templates/     session-note.md · project-readme.md
 
 | Phase | Topic | Code | Note |
 |---|---|---|---|
+| Daily 001 | Patch-window drift check (Bash/Ansible/Python/Go) | `daily-labs/day-001-patch-window-drift-check/` | [README](daily-labs/day-001-patch-window-drift-check/README.md) |
 | Bash W1 Wed | for / while / while read | `01-bash/week01-foundations/ping_check.sh` | [wed-loops.md](01-bash/week01-foundations/wed-loops.md) |

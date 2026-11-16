@@ -1,0 +1,3 @@
+patchcheck report: node-02
+INFO kernel 5.14.0-362.24.1.el9_3.x86_64 -> 5.14.0-427.13.1.el9_4.x86_64
+RESULT OK crit=0 warn=0

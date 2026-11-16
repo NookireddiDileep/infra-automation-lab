@@ -1,0 +1,10 @@
+# patchcheck snapshot v1
+# host=node-02 taken=2026-11-15T23:05:00Z
+kernel 5.14.0-427.13.1.el9_4.x86_64
+mount / xfs
+mount /boot xfs
+port tcp/22
+service chronyd.service
+service sshd.service
+fsuse / 41
+fsuse /boot 51

@@ -1,0 +1,60 @@
+---
+# Reusable comparison (used by patch_window.yml and compare_samples.yml).
+# In : pre_text, post_text (snapshot file contents), fs_warn_pct (default 90)
+# Out: report_text, report_lines, report_result (OK|WARN|CRIT), report_rc (0|1|2)
+# Same rules and byte-for-byte same report as the Bash/Python/Go versions.
+
+- name: Check both inputs are v1 snapshots
+  ansible.builtin.assert:
+    that:
+      - (pre_text.splitlines() + [''])[0] == '# patchcheck snapshot v1'
+      - (post_text.splitlines() + [''])[0] == '# patchcheck snapshot v1'
+    fail_msg: "pre/post is not a patchcheck v1 snapshot"
+    quiet: true
+
+- name: Build the drift report
+  ansible.builtin.set_fact:
+    report_text: "{{ _report }}"
+  vars:
+    _warn_pct: "{{ fs_warn_pct | default(90) | int }}"
+    _pre: "{{ pre_text.splitlines() }}"
+    _post: "{{ post_text.splitlines() }}"
+    _pre_items: "{{ _pre | select('match', '^(mount|port|service) ') | map('trim') | unique | sort }}"
+    _post_items: "{{ _post | select('match', '^(mount|port|service) ') | map('trim') | unique | sort }}"
+    _missing: "{{ _pre_items | difference(_post_items) | sort }}"
+    _new: "{{ _post_items | difference(_pre_items) | sort }}"
+    _k_pre: "{{ ((_pre | select('match', '^kernel ') | list) + ['kernel -'])[0].split()[1] }}"
+    _k_post: "{{ ((_post | select('match', '^kernel ') | list) + ['kernel -'])[0].split()[1] }}"
+    _host: "{{ ((_post | select('match', '^# host=') | list) + ['# host=unknown'])[0].split()[1][5:] }}"
+    _report: >-
+      {%- set ns = namespace(out=['patchcheck report: ' ~ _host], hot=[]) -%}
+      {%- if _k_pre != '-' and _k_post != '-' -%}
+      {%- if _k_pre == _k_post -%}
+      {%- set ns.out = ns.out + ['INFO kernel unchanged ' ~ _k_post] -%}
+      {%- else -%}
+      {%- set ns.out = ns.out + ['INFO kernel ' ~ _k_pre ~ ' -> ' ~ _k_post] -%}
+      {%- endif -%}
+      {%- endif -%}
+      {%- for i in _missing -%}
+      {%- set ns.out = ns.out + ['CRIT missing ' ~ i] -%}
+      {%- endfor -%}
+      {%- for i in _new -%}
+      {%- set ns.out = ns.out + ['WARN new ' ~ i] -%}
+      {%- endfor -%}
+      {%- for l in _post if l is match('^fsuse ') and (l.split()[2] | int) >= (_warn_pct | int) -%}
+      {%- set ns.hot = ns.hot + [l.split()[1] ~ ' ' ~ l.split()[2]] -%}
+      {%- endfor -%}
+      {%- for h in ns.hot | sort -%}
+      {%- set ns.out = ns.out + ['WARN fs ' ~ h.split()[0] ~ ' at ' ~ h.split()[1] ~ '% (>= ' ~ (_warn_pct | int) ~ '%)'] -%}
+      {%- endfor -%}
+      {%- set crit = _missing | length -%}
+      {%- set warn = (_new | length) + (ns.hot | length) -%}
+      {%- set result = 'CRIT' if crit > 0 else ('WARN' if warn > 0 else 'OK') -%}
+      {%- set ns.out = ns.out + ['RESULT ' ~ result ~ ' crit=' ~ crit ~ ' warn=' ~ warn] -%}
+      {{ ns.out | join('\n') }}
+
+- name: Derive result and exit-style code
+  ansible.builtin.set_fact:
+    report_lines: "{{ report_text.splitlines() }}"
+    report_result: "{{ report_text.splitlines()[-1].split()[1] }}"
+    report_rc: "{{ {'OK': 0, 'WARN': 1, 'CRIT': 2}[report_text.splitlines()[-1].split()[1]] }}"

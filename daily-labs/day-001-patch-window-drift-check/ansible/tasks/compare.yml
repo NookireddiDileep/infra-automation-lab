@@ -16,6 +16,7 @@
   ansible.builtin.set_fact:
     report_text: "{{ _report }}"
   vars:
+    _nl: "\n"   # a real newline (YAML double quotes); Ansible does NOT unescape '\n' inside Jinja
     _warn_pct: "{{ fs_warn_pct | default(90) | int }}"
     _pre: "{{ pre_text.splitlines() }}"
     _post: "{{ post_text.splitlines() }}"
@@ -51,7 +52,7 @@
       {%- set warn = (_new | length) + (ns.hot | length) -%}
       {%- set result = 'CRIT' if crit > 0 else ('WARN' if warn > 0 else 'OK') -%}
       {%- set ns.out = ns.out + ['RESULT ' ~ result ~ ' crit=' ~ crit ~ ' warn=' ~ warn] -%}
-      {{ ns.out | join('\n') }}
+      {{ ns.out | join(_nl) }}
 
 - name: Derive result and exit-style code
   ansible.builtin.set_fact:

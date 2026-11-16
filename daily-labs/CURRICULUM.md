@@ -4,7 +4,7 @@
 
 Every lab is solved in **Bash, Ansible, Python and Go**. The **scenario track** climbs the stack toward AI infra. The **language focus** follows [ROADMAP.md](../ROADMAP.md): the focus language is the one I rewrite myself in `mine/`.
 
-Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi`/`dcgmi`/`ibstat` output, logs), so it runs anywhere with no cluster or GPU. Each README also has a **"Run it for real"** section for the J2C OpenShift lab, a GCP VM or the AROHAN kind clusters.
+Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi`/`dcgmi`/`ibstat` output, logs), so it runs anywhere with no cluster or GPU. Each README also has a **"Run it for real"** section for the OpenShift training lab, a GCP VM or the AROHAN kind clusters.
 
 ---
 

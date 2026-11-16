@@ -11,7 +11,7 @@ It's a monthly patch window: 40 RHEL 9 hosts, `dnf update`, reboot. The change t
 
 **Goal:** take a machine-readable snapshot before patching and another after the reboot, and get a report that says exactly what disappeared, what appeared, and what's about to fill up. It should **fail the change** (non-zero exit / failed Ansible host) when something critical vanished.
 
-This is the T-Systems pre/post-check routine, automated.
+This is the pre/post-check routine from real enterprise patch windows, automated.
 
 ## 2. The contract (every implementation must follow it)
 
@@ -88,7 +88,7 @@ ansible-playbook patch_window.yml -e phase=pre   # snapshots/<host>-pre.txt
 ansible-playbook patch_window.yml -e phase=post  # report + fail on CRIT
 ```
 
-**On the J2C lab or a GCP RHEL VM:** take a `pre` snapshot, then `systemctl stop chronyd` and `umount` a test filesystem, take `post`, and compare. You should get CRIT. Undo the changes and the result goes back to OK.
+**On the OpenShift training lab or a GCP RHEL VM:** take a `pre` snapshot, then `systemctl stop chronyd` and `umount` a test filesystem, take `post`, and compare. You should get CRIT. Undo the changes and the result goes back to OK.
 
 ## 5. Break it (do these yourself, then record what you saw)
 

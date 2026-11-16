@@ -17,7 +17,7 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
 <!-- fill from Week 2 -->
 
 ## Scenario stories (STAR) — link scripts to real work
-<!-- e.g. "During DR drills at T-Systems I checked reachability of N hosts by hand; I'd now script it like ping_check.sh, which cuts the check from X min to Y sec." -->
+<!-- e.g. "During DR drills at work I checked reachability of N hosts by hand; I'd now script it like ping_check.sh, which cuts the check from X min to Y sec." -->
 
 ## Daily labs
 - **How do you verify a patch window beyond "it pings"?** (Daily 001)  

@@ -24,3 +24,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   Snapshot mounts, listening ports, running services and kernel before and after, then diff them. Anything missing is CRIT and fails the change; new items and full disks are WARN. In Ansible, use `serial` + `max_fail_percentage: 0` so a bad batch stops the rollout.
 - **Bash vs Ansible vs Python vs Go for the same job?** (Daily 001)  
   Bash for one host with no dependencies. Ansible for fleet collection and gating. Python for tested logic and JSON. Go for a static binary and concurrent fleet processing.
+- **`df` says the filesystem is full but `du` adds up to much less. Why, and how do you fix it without a reboot?** (Daily 002)  
+  Deleted-but-open files: the inode stays allocated until the last file descriptor closes, and `du` can't see a file with no name. Find them with `lsof +L1` or `find /proc/*/fd -lname '*(deleted)'`. Restart or reload the owning process, or `truncate -s 0 /proc/PID/fd/N`. Count shared inodes once. Other causes: data hidden under a mount point, ext4 reserved blocks, LVM/btrfs snapshots.
+- **Walk me through a disk-full incident.** (Daily 002)  
+  `df -h` and `df -i` (space vs inodes) → `du -xh -d 1 | sort -h` on the hot fs → deleted-open files → old rotated logs and caches → work out whether safe cleanup brings it under the threshold or it needs capacity → fix the root cause (logrotate with a `postrotate` signal, retention, quotas, a separate fs) and alert on time-to-full, not just %.
+- **At 1,000 nodes, would you auto-delete files when disks fill?** (Daily 002)  
+  Not broadly. Detect with metrics (pull), triage read-only on the hot nodes (push), then allow-listed actions only (truncate known logs of known units, image prune), dry-run first and verify with a second snapshot. Deleting data automatically across a fleet is how you lose a dataset.

@@ -29,7 +29,7 @@ Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi
 
 ### Stage 1: Linux / RHEL fleet ops
 1. ✅ Patch-window drift check (pre/post reboot)
-2. Disk-full triage: top consumers, deleted-but-open files (`/proc/*/fd`), safe log cleanup
+2. ✅ Disk-full triage: top consumers, deleted-but-open files (`/proc/*/fd`), safe log cleanup
 3. TLS certificate expiry audit across endpoints and files
 4. Time sync drift (chrony offset/stratum) across a fleet. Clock skew breaks distributed training and etcd.
 5. systemd flapping services: restart storms from journal

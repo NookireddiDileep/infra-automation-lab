@@ -9,6 +9,7 @@ Every day there's one realistic infra scenario (RHEL ops → OpenShift/Kubernete
 | Day | Date | Scenario | Stage | Reference (B·A·P·G) | Mine |
 |---|---|---|---|---|---|
 | [001](day-001-patch-window-drift-check/) | 2026-11-16 | Patch-window drift check: what vanished after the reboot? | 1 · Linux ops | ✅✅✅✅ | ⬜ Bash |
+| [002](day-002-disk-full-triage/) | 2026-11-16 | Disk-full triage: `df` says full, `du` disagrees (deleted-but-open files, safe cleanup) | 1 · Linux ops | ✅✅✅✅ | ⬜ Bash |
 
 ### Folder convention
 ```

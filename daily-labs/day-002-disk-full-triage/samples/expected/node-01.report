@@ -1,0 +1,17 @@
+disktriage report: node-01
+CRIT space /var 97% used, 640 MiB free
+  top 7168 MiB /var/log
+  top 2560 MiB /var/lib
+  top 1024 MiB /var/cache
+  deleted 4096 MiB pid=2314 java /var/log/app/app.log.1
+  deleted 1024 MiB pid=1201 httpd /var/log/httpd/access_log
+  deleted 1024 MiB pid=1388 httpd /var/log/httpd/access_log
+  rotated 4 files 1736 MiB older than 7d
+  after cleanup 63% (deleted-open 5120 MiB + rotated 1736 MiB)
+WARN space / 88% used, 4900 MiB free
+  top 12288 MiB /opt
+  top 8192 MiB /usr
+  top 2048 MiB /root
+  needs capacity: still 88% after cleanup (>= 85%)
+WARN inodes /tmp 91% used
+RESULT CRIT crit=1 warn=2

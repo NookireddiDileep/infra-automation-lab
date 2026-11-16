@@ -1,0 +1,21 @@
+# disktriage snapshot v1
+# host={{ inventory_hostname_short }} taken={{ now(utc=true, fmt='%Y-%m-%dT%H:%M:%SZ') }}
+{% for l in df_out.stdout_lines[1:] %}
+{%   set f = l.split(None, 4) %}
+{%   set fstype = (ansible_facts['mounts'] | selectattr('mount', 'equalto', f[4]) | first).fstype %}
+fs {{ f[4] }} {{ fstype }} {{ f[0] }} {{ f[1] }} {{ f[2] | int }} {{ f[3] | int }}
+{% endfor %}
+{% for r in du_out.results | default([]) %}
+{%   for l in r.stdout_lines | default([]) %}
+{%     set f = l.split('\t', 1) %}
+{%     if f[1] != r.item %}
+du {{ f[0] }} {{ f[1] }}
+{%     endif %}
+{%   endfor %}
+{% endfor %}
+{% for l in deleted_out.stdout_lines %}
+deleted {{ l }}
+{% endfor %}
+{% for x in rotated_out.files | sort(attribute='path', case_sensitive=true) %}
+rotated {{ ((now().timestamp() - x.mtime) // 86400) | int }} {{ x.size // 1024 }} {{ x.path }}
+{% endfor %}

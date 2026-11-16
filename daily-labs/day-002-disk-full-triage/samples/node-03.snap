@@ -1,0 +1,14 @@
+# disktriage snapshot v1
+# host=node-03 taken=2026-11-16T02:40:09Z
+fs / xfs 52428800 52428800 210377 52218423
+fs /boot xfs 307200 731136 352 523936
+fs /boot/efi vfat 7168 607232 0 0
+fs /data xfs 91226112 13631488 1820 52426980
+du 41943040 /database
+du 6291456 /usr
+du 52428800 /data/models
+du 31457280 /data/checkpoints
+du 6291456 /data/datasets
+du 1048576 /data/tmp
+deleted 4411 2049 2097152 python3 /data/checkpoints/step-12000.pt
+rotated 14 307200 /var/log/messages-20261101

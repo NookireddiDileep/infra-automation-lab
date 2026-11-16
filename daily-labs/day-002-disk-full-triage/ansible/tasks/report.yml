@@ -1,0 +1,102 @@
+---
+# Reusable triage (used by disk_triage.yml and report_samples.yml).
+# In : snapshot_text (a v1 snapshot), warn_pct (85), crit_pct (95), retain_days (7)
+# Out: report_text, report_lines, report_result (OK|WARN|CRIT), report_rc (0|1|2)
+# Same rules and byte-for-byte the same report as the Bash/Python/Go versions.
+
+- name: Check the input is a v1 snapshot
+  ansible.builtin.assert:
+    that: (snapshot_text.splitlines() + [''])[0] == '# disktriage snapshot v1'
+    fail_msg: "input is not a disktriage v1 snapshot"
+    quiet: true
+
+- name: Build the triage report
+  ansible.builtin.set_fact:
+    report_text: "{{ _report }}"
+  vars:
+    _nl: "\n"   # a real newline (YAML double quotes); Ansible does NOT unescape '\n' inside Jinja
+    _warn: "{{ warn_pct | default(85) | int }}"
+    _crit: "{{ crit_pct | default(95) | int }}"
+    _retain: "{{ retain_days | default(7) | int }}"
+    _lines: "{{ snapshot_text.splitlines() }}"
+    _host: "{{ ((_lines | select('match', '^# host=') | list) + ['# host=unknown'])[0].split()[1][5:] }}"
+    _report: >-
+      {%- macro cpct(a, t) -%}{{ 0 if t <= 0 else -(-(a * 100) // t) }}{%- endmacro -%}
+      {%- macro owner(p, mounts) -%}
+      {%- set o = namespace(best='') -%}
+      {%- for m in mounts if (m == '/' or p == m or p.startswith(m ~ '/')) and (m | length) > (o.best | length) -%}
+      {%- set o.best = m -%}
+      {%- endfor -%}{{ o.best }}
+      {%- endmacro -%}
+      {%- set w = _warn | int -%}{%- set c = _crit | int -%}{%- set ret = _retain | int -%}
+      {%- set s = namespace(fs=[], du=[], dl=[], rot=[], out=[]) -%}
+      {%- for l in _lines[1:] -%}
+      {%- set f = l.split(' ') -%}
+      {%- if f[0] == 'fs' -%}
+      {%- set s.fs = s.fs + [{'m': f[1], 'used': f[3] | int, 'avail': f[4] | int, 'iu': f[5] | int, 'if': f[6] | int}] -%}
+      {%- elif f[0] == 'du' -%}
+      {%- set s.du = s.du + [{'kb': f[1] | int, 'p': l.split(' ', 2)[2]}] -%}
+      {%- elif f[0] == 'deleted' -%}
+      {%- set s.dl = s.dl + [{'pid': f[1] | int, 'ino': f[2] | int, 'kb': f[3] | int, 'comm': f[4], 'p': l.split(' ', 5)[5]}] -%}
+      {%- elif f[0] == 'rotated' -%}
+      {%- set s.rot = s.rot + [{'age': f[1] | int, 'kb': f[2] | int, 'p': l.split(' ', 3)[3]}] -%}
+      {%- endif -%}
+      {%- endfor -%}
+      {%- set mounts = s.fs | map(attribute='m') | list -%}
+      {%- set found = namespace(items=[]) -%}
+      {%- for fs in s.fs -%}
+      {%- set tot = fs.used + fs.avail -%}
+      {%- set pct = cpct(fs.used, tot) | int -%}
+      {%- set sev = 'CRIT' if pct >= c else ('WARN' if pct >= w else '') -%}
+      {%- if sev -%}
+      {%- set d = namespace(lines=[], seen=[], delkb=0, rotkb=0, rotn=0) -%}
+      {%- set top = namespace(items=[]) -%}
+      {%- for x in s.du if owner(x.p, mounts) == fs.m -%}{%- set top.items = top.items + [x] -%}{%- endfor -%}
+      {#- Jinja's sort is case-INSENSITIVE by default: case_sensitive=true for byte order -#}
+      {%- for x in (top.items | sort(attribute='p', case_sensitive=true) | sort(attribute='kb', reverse=true))[:3] -%}
+      {%- set d.lines = d.lines + ['top ' ~ (x.kb // 1024) ~ ' MiB ' ~ x.p] -%}
+      {%- endfor -%}
+      {%- set held = namespace(items=[]) -%}
+      {%- for x in s.dl if owner(x.p, mounts) == fs.m -%}{%- set held.items = held.items + [x] -%}{%- endfor -%}
+      {%- for x in held.items | sort(attribute='pid') | sort(attribute='kb', reverse=true) -%}
+      {%- set d.lines = d.lines + ['deleted ' ~ (x.kb // 1024) ~ ' MiB pid=' ~ x.pid ~ ' ' ~ x.comm ~ ' ' ~ x.p] -%}
+      {%- if x.ino not in d.seen -%}{%- set d.seen = d.seen + [x.ino] -%}{%- set d.delkb = d.delkb + x.kb -%}{%- endif -%}
+      {%- endfor -%}
+      {%- for x in s.rot if owner(x.p, mounts) == fs.m and x.age >= ret -%}
+      {%- set d.rotn = d.rotn + 1 -%}{%- set d.rotkb = d.rotkb + x.kb -%}
+      {%- endfor -%}
+      {%- if d.rotn > 0 -%}
+      {%- set d.lines = d.lines + ['rotated ' ~ d.rotn ~ ' files ' ~ (d.rotkb // 1024) ~ ' MiB older than ' ~ ret ~ 'd'] -%}
+      {%- endif -%}
+      {%- set freed = d.delkb + d.rotkb -%}
+      {%- set after = cpct([fs.used - freed, 0] | max, tot) | int -%}
+      {%- if freed > 0 -%}
+      {%- set d.lines = d.lines + ['after cleanup ' ~ after ~ '% (deleted-open ' ~ (d.delkb // 1024) ~ ' MiB + rotated ' ~ (d.rotkb // 1024) ~ ' MiB)'] -%}
+      {%- endif -%}
+      {%- if after >= w -%}
+      {%- set d.lines = d.lines + ['needs capacity: still ' ~ after ~ '% after cleanup (>= ' ~ w ~ '%)'] -%}
+      {%- endif -%}
+      {%- set found.items = found.items + [{'r': 0 if sev == 'CRIT' else 1, 'm': fs.m, 'k': 0,
+           'lines': [sev ~ ' space ' ~ fs.m ~ ' ' ~ pct ~ '% used, ' ~ (fs.avail // 1024) ~ ' MiB free'] + d.lines}] -%}
+      {%- endif -%}
+      {%- set ipct = cpct(fs.iu, fs.iu + fs['if']) | int -%}
+      {%- set isev = 'CRIT' if ipct >= c else ('WARN' if ipct >= w else '') -%}
+      {%- if isev -%}
+      {%- set found.items = found.items + [{'r': 0 if isev == 'CRIT' else 1, 'm': fs.m, 'k': 1,
+           'lines': [isev ~ ' inodes ' ~ fs.m ~ ' ' ~ ipct ~ '% used']}] -%}
+      {%- endif -%}
+      {%- endfor -%}
+      {%- set s.out = ['disktriage report: ' ~ _host] -%}
+      {%- for x in found.items | sort(attribute='k') | sort(attribute='m', case_sensitive=true) | sort(attribute='r') -%}
+      {%- set s.out = s.out + [x.lines[0]] + (x.lines[1:] | map('regex_replace', '^', '  ') | list) -%}
+      {%- endfor -%}
+      {%- set nc = found.items | selectattr('r', 'equalto', 0) | list | length -%}
+      {%- set nw = found.items | selectattr('r', 'equalto', 1) | list | length -%}
+      {%- set s.out = s.out + ['RESULT ' ~ ('CRIT' if nc > 0 else ('WARN' if nw > 0 else 'OK')) ~ ' crit=' ~ nc ~ ' warn=' ~ nw] -%}
+      {{ s.out | join(_nl) }}
+
+- name: Derive result and exit-style code
+  ansible.builtin.set_fact:
+    report_lines: "{{ report_text.splitlines() }}"
+    report_result: "{{ report_text.splitlines()[-1].split()[1] }}"
+    report_rc: "{{ {'OK': 0, 'WARN': 1, 'CRIT': 2}[report_text.splitlines()[-1].split()[1]] }}"

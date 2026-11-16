@@ -1,0 +1,12 @@
+# disktriage snapshot v1
+# host=node-02 taken=2026-11-16T02:40:05Z
+fs / xfs 15728640 26214400 120455 20850009
+fs /boot xfs 262144 776192 348 523940
+fs /var xfs 6291456 14680064 30122 10455478
+du 6291456 /usr
+du 2097152 /opt
+du 4194304 /var/lib
+du 1572864 /var/log
+deleted 977 52 20480 rsyslogd /var/log/messages
+rotated 12 102400 /var/log/messages-20261102
+rotated 5 102400 /var/log/messages-20261109

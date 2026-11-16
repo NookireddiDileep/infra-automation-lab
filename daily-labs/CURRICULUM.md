@@ -10,18 +10,22 @@ Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi
 
 ## The ladder (scenario tracks)
 
-| Stage | Dates (target) | Scenario track | Focus language | Why it matters for AI infra |
-|---|---|---|---|---|
-| **1** | 16 Nov – 29 Nov 2026 | **Linux / RHEL fleet ops** | Bash | GPU nodes are Linux boxes first. Most "GPU incidents" are kernel, driver, disk, NTP or network problems. |
-| **2** | 30 Nov – 27 Dec 2026 | **Kubernetes / OpenShift Day-2** | Ansible | The control plane for AI workloads. This is also the job-switch target. |
-| **3** | 28 Dec 2026 – 31 Jan 2027 | **GPU & HPC operations** | Python | Driver/CUDA drift, XID errors, MIG, NCCL, InfiniBand, DCGM: the actual AI infra ops work. |
-| **4** | 1 Feb – 14 Mar 2027 | **AI platform architecture & SRE** | Go | Capacity, scheduling, fair-share, cost, topology, closed-loop remediation: the *architect* layer. |
-| **5** | from 15 Mar 2027 | **Mixed / interview mode** | rotate | Harder, multi-step incidents across all layers, timed like system-design and troubleshooting rounds. |
+**Priority (updated 16 Nov 2026): OpenShift first.** The immediate goal is an OpenShift/Kubernetes platform role, and the gap to close is *proven* Kubernetes/OpenShift Day-2 work, not Linux. So Stage 2 runs **now** on weekdays, and the remaining Linux scenarios move to Saturdays.
+
+| Stage | When | Scenario track | Why it matters |
+|---|---|---|---|
+| **2 (now)** | Mon–Fri from 17 Nov 2026 until the backlog is done | **Kubernetes / OpenShift Day-2** | The job-switch target and the control plane for AI workloads. |
+| **1** | Saturdays until done | **Linux / RHEL fleet ops** | GPU nodes are Linux boxes first. Already my strength, so it's kept as revision. |
+| **3** | after Stage 2 | **GPU & HPC operations** | Driver/CUDA drift, XID errors, MIG, NCCL, InfiniBand, DCGM: the actual AI infra ops work. |
+| **4** | after Stage 3 | **AI platform architecture & SRE** | Capacity, scheduling, fair-share, cost, topology, closed-loop remediation: the *architect* layer. |
+| **5** | then | **Mixed / interview mode** | Multi-step incidents across all layers, timed like real interview rounds. |
+
+**Focus language** (the one I rewrite myself in `mine/`) follows my own [ROADMAP.md](../ROADMAP.md) phases (Bash → Ansible → Python → Go), independent of the scenario track.
 
 **Weekly rhythm (one lab every day):**
-- **Mon–Fri:** a stage scenario (incident, audit or automation)
-- **Sat:** an **architecture scenario**. Same four tools, but the README adds a design section: how this works at 1,000 nodes / 10,000 GPUs, the trade-offs, and failure domains.
-- **Sun:** an **interview-mode scenario**. Shorter, with a "solve it in 30 min" prompt, plus revision of the week's GOTCHAS and INTERVIEW-BANK.
+- **Mon–Fri:** the next Stage 2 (Kubernetes/OpenShift Day-2) scenario
+- **Sat:** the next Stage 1 Linux scenario. When Stage 1 is done, an **architecture scenario** (how this works at 1,000 nodes / 10,000 GPUs).
+- **Sun:** an **interview-mode** OpenShift/Kubernetes scenario. Shorter, with a "solve it in 30 min" prompt, plus revision of the week's GOTCHAS and INTERVIEW-BANK.
 
 ---
 

@@ -1,0 +1,9 @@
+disktriage report: node-03
+WARN space /data 87% used, 13312 MiB free
+  top 51200 MiB /data/models
+  top 30720 MiB /data/checkpoints
+  top 6144 MiB /data/datasets
+  deleted 2048 MiB pid=4411 python3 /data/checkpoints/step-12000.pt
+  after cleanup 85% (deleted-open 2048 MiB + rotated 0 MiB)
+  needs capacity: still 85% after cleanup (>= 85%)
+RESULT WARN crit=0 warn=1

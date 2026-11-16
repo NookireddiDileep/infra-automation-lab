@@ -1,0 +1,112 @@
+---
+# Disk-full triage across a fleet: snapshot each host, report, fail hosts that are CRIT.
+#   ansible-playbook disk_triage.yml                                   # all disk_targets
+#   ansible-playbook disk_triage.yml -l node-07.example.com -e triage_become=true
+#   ansible-playbook disk_triage.yml -e du_min_pct=101                 # skip du (fast, e.g. in CI)
+# Read-only: it never deletes anything. Cleanup is a human (or a separate, reviewed) step.
+- name: Disk-full triage
+  hosts: disk_targets
+  gather_facts: true
+  become: "{{ triage_become | default(false) | bool }}"   # root sees every process's open files
+  vars:
+    snapshot_dir: "{{ playbook_dir }}/snapshots"
+    warn_pct: 85
+    crit_pct: 95
+    retain_days: 7
+    du_min_pct: 80            # du is slow on big filesystems: only look inside ones >= this % used
+    log_dir: /var/log
+    fail_on_crit: true
+    triage_fstypes: [xfs, ext4, ext3, btrfs, vfat, nfs, nfs4]
+    triage_mounts: "{{ ansible_facts['mounts'] | selectattr('fstype', 'in', triage_fstypes) | map(attribute='mount') | unique | sort }}"
+
+  tasks:
+    - name: Read space and inode usage (GNU df, numbers first so mount points may contain spaces)
+      ansible.builtin.command:
+        argv: "{{ ['df', '-k', '--output=used,avail,iused,iavail,target', '--'] + triage_mounts }}"
+      register: df_out
+      changed_when: false
+
+    - name: Work out which filesystems need a du
+      ansible.builtin.set_fact:
+        du_targets: >-
+          {%- set ns = namespace(hot=[]) -%}
+          {%- for l in df_out.stdout_lines[1:] -%}
+          {%- set f = l.split(None, 4) -%}
+          {%- set tot = (f[0] | int) + (f[1] | int) -%}
+          {%- if tot > 0 and -(-(f[0] | int) * 100 // tot) >= du_min_pct | int -%}
+          {%- set ns.hot = ns.hot + [f[4]] -%}
+          {%- endif -%}
+          {%- endfor -%}{{ ns.hot }}
+
+    - name: Top-level directory sizes on hot filesystems
+      ansible.builtin.command:
+        argv: [du, -xk, -d, "1", --, "{{ item }}"]
+      loop: "{{ du_targets }}"
+      register: du_out
+      changed_when: false
+      failed_when: du_out.rc not in [0, 1]        # 1 = some dirs unreadable: partial sizes are still useful
+
+    - name: Deleted files still held open (df counts them, du cannot see them)
+      ansible.builtin.shell: |
+        set -o pipefail
+        { find /proc/[0-9]*/fd -mindepth 1 -maxdepth 1 -lname '/*(deleted)' 2>/dev/null || true; } |
+        while IFS= read -r fd; do
+          t=$(readlink -- "$fd") || continue
+          case $t in /memfd:*) continue ;; esac
+          [ -f "$fd" ] || continue
+          s=$(stat -L -c '%i %b' -- "$fd" 2>/dev/null) || continue
+          pid=${fd#/proc/}; pid=${pid%%/*}
+          comm=$(tr ' ' _ < "/proc/$pid/comm" 2>/dev/null) || comm='?'
+          echo "$pid ${s% *} $(( ${s#* } / 2 )) ${comm:-?} ${t% (deleted)}"
+        done | sort -u -k1,1n -k2,2n
+      args:
+        executable: /bin/bash
+      register: deleted_out
+      changed_when: false
+
+    - name: Rotated logs (safe cleanup candidates, never the live log)
+      ansible.builtin.find:
+        paths: "{{ log_dir }}"
+        recurse: true
+        file_type: file
+        use_regex: true
+        patterns: ['.*(\.gz|\.xz|\.bz2|\.[0-9]+|-[0-9]{8})$']
+      register: rotated_out
+
+    - name: Ensure the snapshot directory exists on the controller
+      ansible.builtin.file:
+        path: "{{ snapshot_dir }}"
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Write the snapshot to the controller
+      ansible.builtin.template:
+        src: templates/snapshot.j2
+        dest: "{{ snapshot_dir }}/{{ inventory_hostname }}.snap"
+        mode: "0644"
+      delegate_to: localhost
+
+    - name: Triage
+      ansible.builtin.include_tasks: tasks/report.yml
+      vars:
+        snapshot_text: "{{ lookup('ansible.builtin.file', snapshot_dir ~ '/' ~ inventory_hostname ~ '.snap') }}"
+
+    - name: Save the report on the controller
+      ansible.builtin.copy:
+        content: "{{ report_text }}\n"
+        dest: "{{ snapshot_dir }}/{{ inventory_hostname }}.report"
+        mode: "0644"
+      delegate_to: localhost
+
+    - name: Show the report
+      ansible.builtin.debug:
+        var: report_lines
+
+    - name: Fail hosts with a critical filesystem
+      ansible.builtin.fail:
+        msg: "{{ inventory_hostname }}: filesystem CRIT, see {{ snapshot_dir }}/{{ inventory_hostname }}.report"
+      when:
+        - report_result == 'CRIT'
+        - fail_on_crit | bool

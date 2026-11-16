@@ -12,3 +12,7 @@ One line per trap: **symptom → cause → fix** (week/day). Reread every Saturd
 | Go output order changes between runs | Map iteration is random | `sort.Strings` before printing | Daily 001 |
 | Ansible `join('\n')` gives one line with a literal `\n` | Ansible's templating keeps backslashes in Jinja string literals as-is | Define `nl: "\n"` in YAML double quotes and use `join(nl)` | Daily 001 |
 | Drift check flags a service as "missing" though nothing broke | On-demand (socket/D-Bus activated) units exit when idle | Allow-list transient units, or compare only `enabled` services | Daily 001 |
+| `rm` a 4 GB log, `df` doesn't move | A process still holds the deleted inode open; `du` can't see it, `df` still counts it | `find /proc/*/fd -lname '*(deleted)'` / `lsof +L1`, then restart/reload or `truncate -s 0 /proc/PID/fd/N` | Daily 002 |
+| `/database` reported as inside `/data` | Plain string-prefix match on paths | Match `p == m \|\| p` starts with `m + "/"` (whole components), longest wins | Daily 002 |
+| `cmd \| grep -q x` is false although `x` is printed | `pipefail`: `cmd` exits non-zero (or gets SIGPIPE when `grep -q` quits early) | `out=$(cmd) \|\| true; grep -q x <<<"$out"` | Daily 002 |
+| Ansible/Jinja `sort` order differs from `LC_ALL=C sort` | Jinja's `sort` filter is case-insensitive by default | `sort(attribute='p', case_sensitive=true)` | Daily 002 |

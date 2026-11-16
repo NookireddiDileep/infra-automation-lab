@@ -1,0 +1,24 @@
+# disktriage snapshot v1
+# host=node-01 taken=2026-11-16T02:40:00Z
+fs / xfs 36700160 5017600 182344 20787576
+fs /boot xfs 266240 772096 350 523938
+fs /home xfs 524288 9961472 1204 5241676
+fs /tmp xfs 1048576 4194304 2385000 236440
+fs /var xfs 19681280 655360 48211 10437389
+du 12582912 /opt
+du 8388608 /usr
+du 2097152 /root
+du 102400 /etc
+du 7340032 /var/log
+du 2621440 /var/lib
+du 1048576 /var/cache
+du 102400 /var/tmp
+du 943718 /tmp/build-cache
+deleted 2314 131 4194304 java /var/log/app/app.log.1
+deleted 1201 77 1048576 httpd /var/log/httpd/access_log
+deleted 1388 77 1048576 httpd /var/log/httpd/access_log
+rotated 2 524288 /var/log/app/app.log.2.gz
+rotated 9 524288 /var/log/app/app.log.3.gz
+rotated 16 524288 /var/log/app/app.log.4.gz
+rotated 23 524288 /var/log/app/app.log.5.gz
+rotated 30 204800 /var/log/messages-20261018

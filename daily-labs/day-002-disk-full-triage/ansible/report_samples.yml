@@ -1,0 +1,20 @@
+---
+# Self-test: the Ansible triage must produce the same golden reports as Bash/Python/Go.
+#   ansible-playbook report_samples.yml
+- name: Contract test against samples/expected
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    samples_dir: "{{ playbook_dir }}/../samples"
+    cases:
+      - {node: node-01, rc: 2}
+      - {node: node-02, rc: 0}
+      - {node: node-03, rc: 1}
+  tasks:
+    - name: Check each sample
+      ansible.builtin.include_tasks: tasks/check_sample.yml
+      loop: "{{ cases }}"
+      loop_control:
+        loop_var: case
+        label: "{{ case.node }}"

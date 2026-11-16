@@ -1,0 +1,13 @@
+---
+- name: Triage sample {{ case.node }}
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/report.yml"
+  vars:
+    snapshot_text: "{{ lookup('ansible.builtin.file', samples_dir ~ '/' ~ case.node ~ '.snap') }}"
+
+- name: Assert golden report and code for {{ case.node }}
+  ansible.builtin.assert:
+    that:
+      - report_lines == lookup('ansible.builtin.file', samples_dir ~ '/expected/' ~ case.node ~ '.report').splitlines()
+      - report_rc | int == case.rc
+    fail_msg: "{{ report_lines }}"
+    success_msg: "{{ case.node }}: {{ report_result }} matches golden report"

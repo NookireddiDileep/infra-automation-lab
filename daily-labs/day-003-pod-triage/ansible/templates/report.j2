@@ -1,0 +1,8 @@
+podtriage report: {{ report_name }}
+{% for r in parts %}
+{{ r[4] }}
+{% endfor %}
+{% for c in classes %}
+HINT {{ c }}: {{ hints[c] }}
+{% endfor %}
+RESULT {{ result }} crit={{ crit }} warn={{ warn }} pods={{ doc['items'] | length }}

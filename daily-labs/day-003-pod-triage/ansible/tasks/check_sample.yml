@@ -1,0 +1,11 @@
+---
+- name: Triage {{ pods_file | basename }}
+  ansible.builtin.include_tasks: triage.yml
+
+- name: Report must equal the golden file and the verdict must match
+  ansible.builtin.assert:
+    that:
+      - triage_report == golden
+      - triage_result == want_result
+    quiet: true
+    success_msg: "ok {{ pods_file | basename }} -> {{ triage_result }}"

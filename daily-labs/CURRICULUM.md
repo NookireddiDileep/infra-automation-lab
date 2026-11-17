@@ -10,22 +10,22 @@ Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi
 
 ## The ladder (scenario tracks)
 
-**Priority (updated 16 Nov 2026): OpenShift first.** The immediate goal is an OpenShift/Kubernetes platform role, and the gap to close is *proven* Kubernetes/OpenShift Day-2 work, not Linux. So Stage 2 runs **now** on weekdays, and the remaining Linux scenarios move to Saturdays.
+**Priority (updated 16 Nov 2026): OpenShift first.** The immediate goal is an OpenShift/Kubernetes platform role, and the gap to close is *proven* Kubernetes/OpenShift Day-2 work, not Linux. So Stage 2 runs **now** on weekdays, and the remaining Linux scenarios move to Fridays.
 
 | Stage | When | Scenario track | Why it matters |
 |---|---|---|---|
 | **2 (now)** | Mon–Fri from 17 Nov 2026 until the backlog is done | **Kubernetes / OpenShift Day-2** | The job-switch target and the control plane for AI workloads. |
-| **1** | Saturdays until done | **Linux / RHEL fleet ops** | GPU nodes are Linux boxes first. Already my strength, so it's kept as revision. |
+| **1** | Fridays until done | **Linux / RHEL fleet ops** | GPU nodes are Linux boxes first. Already my strength, so it's kept as revision. |
 | **3** | after Stage 2 | **GPU & HPC operations** | Driver/CUDA drift, XID errors, MIG, NCCL, InfiniBand, DCGM: the actual AI infra ops work. |
 | **4** | after Stage 3 | **AI platform architecture & SRE** | Capacity, scheduling, fair-share, cost, topology, closed-loop remediation: the *architect* layer. |
 | **5** | then | **Mixed / interview mode** | Multi-step incidents across all layers, timed like real interview rounds. |
 
 **Focus language** (the one I rewrite myself in `mine/`) follows my own [ROADMAP.md](../ROADMAP.md) phases (Bash → Ansible → Python → Go), independent of the scenario track.
 
-**Weekly rhythm (one lab every day):**
-- **Mon–Fri:** the next Stage 2 (Kubernetes/OpenShift Day-2) scenario
-- **Sat:** the next Stage 1 Linux scenario. When Stage 1 is done, an **architecture scenario** (how this works at 1,000 nodes / 10,000 GPUs).
-- **Sun:** an **interview-mode** OpenShift/Kubernetes scenario. Shorter, with a "solve it in 30 min" prompt, plus revision of the week's GOTCHAS and INTERVIEW-BANK.
+**Weekly rhythm (Monday–Friday, one lab per weekday):**
+- **Mon–Thu:** the next Stage 2 (Kubernetes/OpenShift Day-2) scenario.
+- **Fri:** the next Stage 1 Linux scenario. When Stage 1 is done, Fridays take the next Stage 2 item too, and each week ends with an interview-style "solve it in 30 min" prompt in that day's README.
+- **Sat–Sun:** no new lab. Use them for the "Your turn" rewrite in `mine/`, and for revision of GOTCHAS and INTERVIEW-BANK.
 
 ---
 
@@ -45,10 +45,10 @@ Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi
 11. RPM package drift between "identical" nodes (golden image compliance)
 12. Backup verification report (job logs → missed/failed/oversized)
 13. NIC / bonding / MTU consistency check (jumbo frames for storage and RDMA networks)
-14. **Sat · architecture:** fleet health-check design for 1,000 nodes (push vs pull, sharding, timeouts)
+14. **Fri · architecture:** fleet health-check design for 1,000 nodes (push vs pull, sharding, timeouts)
 
 ### Stage 2: Kubernetes / OpenShift Day-2
-15. Pod triage report: CrashLoopBackOff, OOMKilled, ImagePullBackOff with reasons
+15. ✅ Pod triage report: CrashLoopBackOff, OOMKilled, ImagePullBackOff with reasons
 16. Pending pod root-cause classifier (FailedScheduling reason parser; links to AROHAN Lab 03)
 17. Namespace onboarding: quota + limitrange + RBAC + NetworkPolicy from one spec
 18. ResourceQuota / requests-vs-usage right-sizing report
@@ -61,7 +61,7 @@ Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi
 25. RBAC audit: who can `*` on what (cluster-admin sprawl)
 26. Image registry hygiene: tags, digests, unsigned images, old images
 27. Drain & cordon orchestrator with PDB awareness (rolling node maintenance)
-28. **Sat · architecture:** multi-tenant cluster design (quotas, priority classes, isolation)
+28. **Fri · architecture:** multi-tenant cluster design (quotas, priority classes, isolation)
 
 ### Stage 3: GPU & HPC operations
 29. GPU fleet inventory from `nvidia-smi -q` / CSV: model, driver, CUDA, ECC, persistence mode
@@ -77,7 +77,7 @@ Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi
 39. Model storage throughput check: time to load weights vs SLO (cold-start budget)
 40. Inference SLO check: TTFT / tokens-per-sec percentiles from logs (links to AROHAN Lab 02)
 41. GPU node cordon-and-drain on hardware fault (automated remediation, dry-run first)
-42. **Sat · architecture:** GPU cluster design for 1,000 GPUs (nodes, network rails, storage, failure domains)
+42. **Fri · architecture:** GPU cluster design for 1,000 GPUs (nodes, network rails, storage, failure domains)
 
 ### Stage 4: AI platform architecture & SRE
 43. GPU capacity planner: demand forecast → nodes to buy, with headroom and N+1
@@ -92,7 +92,7 @@ Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi
 52. Closed-loop remediation: detect → diagnose → act → verify, with guardrails (AROHAN direction)
 53. Multi-cluster placement: where should this training job run (capacity, cost, data locality)?
 54. Reconciler pattern: desired-state controller for GPU node labels/taints (Go operator style)
-55. **Sat · architecture:** an AI platform reference architecture write-up (the portfolio centrepiece)
+55. **Fri · architecture:** an AI platform reference architecture write-up (the portfolio centrepiece)
 
 ---
 

@@ -1,0 +1,36 @@
+---
+# Triage one saved pod list and write the report. Idempotent: same input, same file, changed=0 on re-run.
+#   ansible-playbook pod_triage.yml -e pods_file=../samples/ocp-prod.pods.json
+#   ansible-playbook pod_triage.yml -e pods_file=... -e fail_on_crit=true     # gate a pipeline
+- name: Pod triage (offline, against a saved oc/kubectl JSON)
+  hosts: localhost
+  gather_facts: false
+  vars:
+    pods_file: "{{ playbook_dir }}/../samples/ocp-prod.pods.json"
+    restart_warn: 5
+    fail_on_crit: false
+    out_dir: "{{ playbook_dir }}/reports"
+  tasks:
+    - name: Run the triage
+      ansible.builtin.include_tasks: tasks/triage.yml
+
+    - name: Make sure the output directory exists
+      ansible.builtin.file:
+        path: "{{ out_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Write the report
+      ansible.builtin.copy:
+        content: "{{ triage_report }}"
+        dest: "{{ out_dir }}/{{ pods_file | basename | regex_replace('(\\.pods)?\\.json$', '') }}.report"
+        mode: "0644"
+
+    - name: Show the verdict
+      ansible.builtin.debug:
+        msg: "{{ triage_report.split('\n')[-2] }}"
+
+    - name: Gate on CRIT when asked (the playbook equivalent of exit code 2)
+      ansible.builtin.fail:
+        msg: "{{ triage_report.split('\n')[-2] }}"
+      when: fail_on_crit | bool and triage_result == 'CRIT'

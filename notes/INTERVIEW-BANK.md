@@ -26,6 +26,12 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   Bash for one host with no dependencies. Ansible for fleet collection and gating. Python for tested logic and JSON. Go for a static binary and concurrent fleet processing.
 - **`df` says the filesystem is full but `du` adds up to much less. Why, and how do you fix it without a reboot?** (Daily 002)  
   Deleted-but-open files: the inode stays allocated until the last file descriptor closes, and `du` can't see a file with no name. Find them with `lsof +L1` or `find /proc/*/fd -lname '*(deleted)'`. Restart or reload the owning process, or `truncate -s 0 /proc/PID/fd/N`. Count shared inodes once. Other causes: data hidden under a mount point, ext4 reserved blocks, LVM/btrfs snapshots.
+- **A pod shows CrashLoopBackOff. How do you tell an app bug from an OOM kill?** (Daily 003)  
+  CrashLoopBackOff is only the kubelet's back-off state. `oc describe pod` / `lastState.terminated` gives the reason and exit code: `OOMKilled` (137) means the container hit `limits.memory`, so compare with `oc adm top pod` and raise the limit or fix the leak; exit 1 is an app error, so read `oc logs -p`. Check probes too: a failing liveness probe also kills with 137.
+- **ImagePullBackOff: what do you check, in order?** (Daily 003)  
+  `oc describe pod` events: tag/digest typo, missing or wrong `imagePullSecret` in the namespace/ServiceAccount, registry unreachable or rate-limited, and on disconnected OpenShift the mirror configuration (ImageContentSourcePolicy/IDMS) not covering that repository.
+- **Why would your triage tool treat "OOMKilled but Running" as WARN, not CRIT?** (Daily 003)  
+  The container recovered, so users aren't down now, but the limit is wrong and it will bite again under load. Severity follows *current* availability; the restart history is the early warning.
 - **Walk me through a disk-full incident.** (Daily 002)  
   `df -h` and `df -i` (space vs inodes) → `du -xh -d 1 | sort -h` on the hot fs → deleted-open files → old rotated logs and caches → work out whether safe cleanup brings it under the threshold or it needs capacity → fix the root cause (logrotate with a `postrotate` signal, retention, quotas, a separate fs) and alert on time-to-full, not just %.
 - **At 1,000 nodes, would you auto-delete files when disks fill?** (Daily 002)  

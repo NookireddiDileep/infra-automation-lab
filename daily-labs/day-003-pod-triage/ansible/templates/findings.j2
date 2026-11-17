@@ -1,0 +1,33 @@
+{# One line per finding: rank TAB ns/pod TAB container TAB class TAB text. Sorted by the caller (tab sorts below every printable char). #}
+{% for p in doc['items'] %}
+{% set st = p.status | default({}, true) %}
+{% set key = (p.metadata.namespace | default('?', true)) ~ '/' ~ (p.metadata.name | default('?', true)) %}
+{% set phase = st.phase | default('', true) %}
+{% if phase == 'Failed' and st.reason | default('', true) == 'Evicted' %}
+1{{ tab }}{{ key }}{{ tab }}-{{ tab }}Evicted{{ tab }}WARN Evicted {{ key }} - node={{ (p.spec | default({}, true)).nodeName | default('?', true) }}
+{% elif phase in ['Running', 'Pending'] %}
+{% for cs in st.containerStatuses | default([], true) %}
+{% set ctr = cs.name | default('?', true) %}
+{% set w = ((cs.state | default({}, true)).waiting | default({}, true)).reason | default('', true) %}
+{% set last = ((cs.lastState | default({}, true)).terminated | default({}, true)) %}
+{% set cur = (cs.state | default({}, true)).terminated | default(none) %}
+{% set n = cs.restartCount | default(0) | int %}
+{% if w in ['ImagePullBackOff', 'ErrImagePull'] %}
+0{{ tab }}{{ key }}{{ tab }}{{ ctr }}{{ tab }}ImagePullBackOff{{ tab }}CRIT ImagePullBackOff {{ key }} {{ ctr }} image={{ cs.image | default('?', true) }}
+{% elif w in ['CreateContainerConfigError', 'CreateContainerError'] %}
+0{{ tab }}{{ key }}{{ tab }}{{ ctr }}{{ tab }}ContainerConfigError{{ tab }}CRIT ContainerConfigError {{ key }} {{ ctr }} reason={{ w }}
+{% elif last.reason | default('') == 'OOMKilled' or (cur | default({}, true)).reason | default('') == 'OOMKilled' %}
+{% set ns = namespace(limit='none') %}
+{% for c in (p.spec | default({}, true)).containers | default([], true) if c.name == cs.name %}
+{% set ns.limit = ((c.resources | default({}, true)).limits | default({}, true)).memory | default('none', true) %}
+{% endfor %}
+{% set down = w != '' or cur is not none %}
+{{ 0 if down else 1 }}{{ tab }}{{ key }}{{ tab }}{{ ctr }}{{ tab }}OOMKilled{{ tab }}{{ 'CRIT' if down else 'WARN' }} OOMKilled {{ key }} {{ ctr }} restarts={{ n }} limit={{ ns.limit }}
+{% elif w == 'CrashLoopBackOff' %}
+0{{ tab }}{{ key }}{{ tab }}{{ ctr }}{{ tab }}CrashLoopBackOff{{ tab }}CRIT CrashLoopBackOff {{ key }} {{ ctr }} restarts={{ n }} exit={{ last.exitCode if last.exitCode is defined else '?' }}
+{% elif n >= restart_warn | int %}
+1{{ tab }}{{ key }}{{ tab }}{{ ctr }}{{ tab }}HighRestarts{{ tab }}WARN HighRestarts {{ key }} {{ ctr }} restarts={{ n }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}

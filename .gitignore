@@ -31,3 +31,4 @@ bin/
 
 # daily-labs runtime output
 daily-labs/**/snapshots/
+daily-labs/**/ansible/reports/

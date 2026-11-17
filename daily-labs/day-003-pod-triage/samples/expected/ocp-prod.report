@@ -1,0 +1,16 @@
+podtriage report: ocp-prod
+CRIT ImagePullBackOff payments/batch-ledger-58d4f7c6b-p8s2d batch image=registry.example.com/payments/batch:latest
+CRIT ContainerConfigError payments/gateway-9b7c5d6f4-h6v9c gateway reason=CreateContainerConfigError
+CRIT ImagePullBackOff payments/ledger-7f6d8b9c4-m3n8v ledger image=registry.example.com/payments/ledger:v2.4.1
+CRIT CrashLoopBackOff shop/api-5d7b9c4f8-q9w2z api restarts=12 exit=1
+CRIT OOMKilled shop/cart-6c8f7d9b5-x2k4p cart restarts=7 limit=256Mi
+WARN Evicted batch/etl-nightly-28391-zq7rt - node=node-02
+WARN HighRestarts monitoring/node-exporter-4tq7m node-exporter restarts=9
+WARN OOMKilled shop/web-85c9d7f6b-t5h7j web restarts=2 limit=512Mi
+HINT ContainerConfigError: oc describe pod: missing Secret/ConfigMap key or bad securityContext
+HINT CrashLoopBackOff: oc logs -p <pod> -c <container>; check exit code, probes, startup deps
+HINT Evicted: node pressure: oc describe node; set ephemeral-storage requests/limits
+HINT HighRestarts: oc logs -p; check liveness probe and exit codes before it becomes a CrashLoop
+HINT ImagePullBackOff: oc describe pod: image tag, pull secret, registry reachability
+HINT OOMKilled: compare limit with working set (oc adm top pod); raise limit or fix the leak
+RESULT CRIT crit=5 warn=3 pods=12

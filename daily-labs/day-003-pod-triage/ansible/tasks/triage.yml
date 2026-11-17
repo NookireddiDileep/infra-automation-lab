@@ -1,0 +1,43 @@
+---
+# In:  pods_file (path), restart_warn (int)
+# Out: triage_report (text, byte-identical to the Bash/Python/Go report), triage_result (OK|WARN|CRIT)
+- name: Load the saved pod list (oc get pods -A -o json)
+  ansible.builtin.set_fact:
+    doc: "{{ lookup('ansible.builtin.file', pods_file) | from_json }}"
+
+- name: Refuse anything that is not a Pod List
+  ansible.builtin.assert:
+    that:
+      - doc is mapping
+      - doc.kind | default('') in ['List', 'PodList']
+      - doc['items'] is defined and doc['items'] is sequence and doc['items'] is not string
+    fail_msg: "{{ pods_file }}: not a Pod List (expected kind List/PodList with items[])"
+    quiet: true
+
+- name: Classify every container (rank TAB ns/pod TAB container TAB class TAB text), sorted
+  ansible.builtin.set_fact:
+    triage_rows: "{{ (lookup('ansible.builtin.template', 'findings.j2') | default('', true)) | split(nl) | select('truthy') | list | sort }}"
+  vars:
+    tab: "\t"
+    nl: "\n"
+
+- name: Render the report
+  ansible.builtin.set_fact:
+    triage_result: "{{ result }}"
+    triage_report: "{{ (lookup('ansible.builtin.template', 'report.j2') | trim) ~ nl }}"
+  vars:
+    nl: "\n"
+    tab: "\t"
+    report_name: "{{ pods_file | basename | regex_replace('(\\.pods)?\\.json$', '') }}"
+    parts: "{{ triage_rows | map('split', tab) | list }}"
+    classes: "{{ parts | map(attribute=3) | unique | sort | list }}"
+    crit: "{{ parts | selectattr(0, 'equalto', '0') | list | length }}"
+    warn: "{{ parts | selectattr(0, 'equalto', '1') | list | length }}"
+    result: "{{ 'CRIT' if crit | int > 0 else ('WARN' if warn | int > 0 else 'OK') }}"
+    hints:
+      ContainerConfigError: "oc describe pod: missing Secret/ConfigMap key or bad securityContext"
+      CrashLoopBackOff: "oc logs -p <pod> -c <container>; check exit code, probes, startup deps"
+      Evicted: "node pressure: oc describe node; set ephemeral-storage requests/limits"
+      HighRestarts: "oc logs -p; check liveness probe and exit codes before it becomes a CrashLoop"
+      ImagePullBackOff: "oc describe pod: image tag, pull secret, registry reachability"
+      OOMKilled: "compare limit with working set (oc adm top pod); raise limit or fix the leak"

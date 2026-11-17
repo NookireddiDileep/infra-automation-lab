@@ -1,0 +1,557 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {},
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "cart-6c8f7d9b5-x2k4p",
+        "namespace": "shop",
+        "labels": {
+          "app": "cart"
+        }
+      },
+      "spec": {
+        "nodeName": "node-01",
+        "containers": [
+          {
+            "name": "cart",
+            "image": "registry.example.com/shop/cart:1.8.2",
+            "resources": {
+              "limits": {
+                "memory": "256Mi"
+              }
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "cart",
+            "image": "registry.example.com/shop/cart:1.8.2",
+            "imageID": "",
+            "ready": false,
+            "restartCount": 7,
+            "state": {
+              "waiting": {
+                "reason": "CrashLoopBackOff",
+                "message": "back-off 5m0s restarting failed container"
+              }
+            },
+            "lastState": {
+              "terminated": {
+                "reason": "OOMKilled",
+                "exitCode": 137,
+                "startedAt": "2026-11-16T04:00:00Z",
+                "finishedAt": "2026-11-16T04:02:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "api-5d7b9c4f8-q9w2z",
+        "namespace": "shop",
+        "labels": {
+          "app": "api"
+        }
+      },
+      "spec": {
+        "nodeName": "node-02",
+        "containers": [
+          {
+            "name": "api",
+            "image": "registry.example.com/shop/api:3.1.0",
+            "resources": {
+              "limits": {
+                "memory": "1Gi"
+              }
+            }
+          },
+          {
+            "name": "istio-proxy",
+            "image": "registry.example.com/mesh/proxy:1.20",
+            "resources": {}
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "api",
+            "image": "registry.example.com/shop/api:3.1.0",
+            "imageID": "",
+            "ready": false,
+            "restartCount": 12,
+            "state": {
+              "waiting": {
+                "reason": "CrashLoopBackOff",
+                "message": "back-off 5m0s restarting failed container"
+              }
+            },
+            "lastState": {
+              "terminated": {
+                "reason": "Error",
+                "exitCode": 1,
+                "startedAt": "2026-11-16T04:00:00Z",
+                "finishedAt": "2026-11-16T04:02:00Z"
+              }
+            }
+          },
+          {
+            "name": "istio-proxy",
+            "image": "registry.example.com/mesh/proxy:1.20",
+            "imageID": "",
+            "ready": true,
+            "restartCount": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-16T04:10:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "web-85c9d7f6b-t5h7j",
+        "namespace": "shop",
+        "labels": {
+          "app": "web"
+        }
+      },
+      "spec": {
+        "nodeName": "node-03",
+        "containers": [
+          {
+            "name": "web",
+            "image": "registry.example.com/shop/web:5.0.4",
+            "resources": {
+              "limits": {
+                "memory": "512Mi"
+              }
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "web",
+            "image": "registry.example.com/shop/web:5.0.4",
+            "imageID": "",
+            "ready": true,
+            "restartCount": 2,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-16T04:10:00Z"
+              }
+            },
+            "lastState": {
+              "terminated": {
+                "reason": "OOMKilled",
+                "exitCode": 137,
+                "startedAt": "2026-11-16T04:00:00Z",
+                "finishedAt": "2026-11-16T04:02:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "db-0",
+        "namespace": "shop",
+        "labels": {
+          "app": "db"
+        }
+      },
+      "spec": {
+        "nodeName": "node-03",
+        "containers": [
+          {
+            "name": "postgres",
+            "image": "registry.example.com/data/postgres:15",
+            "resources": {
+              "limits": {
+                "memory": "4Gi"
+              }
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "postgres",
+            "image": "registry.example.com/data/postgres:15",
+            "imageID": "",
+            "ready": true,
+            "restartCount": 4,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-16T04:10:00Z"
+              }
+            },
+            "lastState": {
+              "terminated": {
+                "reason": "Error",
+                "exitCode": 1,
+                "startedAt": "2026-11-16T04:00:00Z",
+                "finishedAt": "2026-11-16T04:02:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ledger-7f6d8b9c4-m3n8v",
+        "namespace": "payments",
+        "labels": {
+          "app": "ledger"
+        }
+      },
+      "spec": {
+        "nodeName": "node-01",
+        "containers": [
+          {
+            "name": "ledger",
+            "image": "registry.example.com/payments/ledger:v2.4.1",
+            "resources": {
+              "limits": {
+                "memory": "512Mi"
+              }
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Pending",
+        "containerStatuses": [
+          {
+            "name": "ledger",
+            "image": "registry.example.com/payments/ledger:v2.4.1",
+            "imageID": "",
+            "ready": false,
+            "restartCount": 0,
+            "state": {
+              "waiting": {
+                "reason": "ImagePullBackOff",
+                "message": "back-off 5m0s restarting failed container"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "batch-ledger-58d4f7c6b-p8s2d",
+        "namespace": "payments",
+        "labels": {
+          "app": "batch-ledger"
+        }
+      },
+      "spec": {
+        "nodeName": "node-02",
+        "containers": [
+          {
+            "name": "batch",
+            "image": "registry.example.com/payments/batch:latest",
+            "resources": {}
+          }
+        ]
+      },
+      "status": {
+        "phase": "Pending",
+        "containerStatuses": [
+          {
+            "name": "batch",
+            "image": "registry.example.com/payments/batch:latest",
+            "imageID": "",
+            "ready": false,
+            "restartCount": 0,
+            "state": {
+              "waiting": {
+                "reason": "ErrImagePull",
+                "message": "back-off 5m0s restarting failed container"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "gateway-9b7c5d6f4-h6v9c",
+        "namespace": "payments",
+        "labels": {
+          "app": "gateway"
+        }
+      },
+      "spec": {
+        "nodeName": "node-01",
+        "containers": [
+          {
+            "name": "gateway",
+            "image": "registry.example.com/payments/gateway:2.2.0",
+            "resources": {
+              "limits": {
+                "memory": "256Mi"
+              }
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Pending",
+        "containerStatuses": [
+          {
+            "name": "gateway",
+            "image": "registry.example.com/payments/gateway:2.2.0",
+            "imageID": "",
+            "ready": false,
+            "restartCount": 0,
+            "state": {
+              "waiting": {
+                "reason": "CreateContainerConfigError",
+                "message": "back-off 5m0s restarting failed container"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "node-exporter-4tq7m",
+        "namespace": "monitoring",
+        "labels": {
+          "app": "node"
+        }
+      },
+      "spec": {
+        "nodeName": "node-02",
+        "containers": [
+          {
+            "name": "node-exporter",
+            "image": "registry.example.com/mon/node-exporter:1.7",
+            "resources": {}
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "node-exporter",
+            "image": "registry.example.com/mon/node-exporter:1.7",
+            "imageID": "",
+            "ready": true,
+            "restartCount": 9,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-16T04:10:00Z"
+              }
+            },
+            "lastState": {
+              "terminated": {
+                "reason": "Error",
+                "exitCode": 1,
+                "startedAt": "2026-11-16T04:00:00Z",
+                "finishedAt": "2026-11-16T04:02:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "etl-nightly-28391-zq7rt",
+        "namespace": "batch",
+        "labels": {
+          "app": "etl-nightly"
+        }
+      },
+      "spec": {
+        "nodeName": "node-02",
+        "containers": [
+          {
+            "name": "etl",
+            "image": "registry.example.com/batch/etl:0.9",
+            "resources": {}
+          }
+        ]
+      },
+      "status": {
+        "phase": "Failed",
+        "reason": "Evicted",
+        "message": "The node was low on resource: ephemeral-storage."
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "report-gen-28390-k2p4x",
+        "namespace": "batch",
+        "labels": {
+          "app": "report-gen"
+        }
+      },
+      "spec": {
+        "nodeName": "node-01",
+        "containers": [
+          {
+            "name": "report",
+            "image": "registry.example.com/batch/report:0.9",
+            "resources": {}
+          }
+        ]
+      },
+      "status": {
+        "phase": "Succeeded",
+        "containerStatuses": [
+          {
+            "name": "report",
+            "image": "registry.example.com/batch/report:0.9",
+            "imageID": "",
+            "ready": false,
+            "restartCount": 0,
+            "state": {
+              "terminated": {
+                "reason": "Completed",
+                "exitCode": 0,
+                "startedAt": "2026-11-16T04:00:00Z",
+                "finishedAt": "2026-11-16T04:02:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "router-default-6b9f8d7c5-n4w2l",
+        "namespace": "openshift-ingress",
+        "labels": {
+          "app": "router-default"
+        }
+      },
+      "spec": {
+        "nodeName": "node-01",
+        "containers": [
+          {
+            "name": "router",
+            "image": "registry.example.com/ocp/router:4.14",
+            "resources": {}
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "router",
+            "image": "registry.example.com/ocp/router:4.14",
+            "imageID": "",
+            "ready": true,
+            "restartCount": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-16T04:10:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "dns-default-x7k2m",
+        "namespace": "openshift-dns",
+        "labels": {
+          "app": "dns"
+        }
+      },
+      "spec": {
+        "nodeName": "node-03",
+        "containers": [
+          {
+            "name": "dns",
+            "image": "registry.example.com/ocp/coredns:4.14",
+            "resources": {}
+          },
+          {
+            "name": "kube-rbac-proxy",
+            "image": "registry.example.com/ocp/rbac-proxy:4.14",
+            "resources": {}
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "dns",
+            "image": "registry.example.com/ocp/coredns:4.14",
+            "imageID": "",
+            "ready": true,
+            "restartCount": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-16T04:10:00Z"
+              }
+            }
+          },
+          {
+            "name": "kube-rbac-proxy",
+            "image": "registry.example.com/ocp/rbac-proxy:4.14",
+            "imageID": "",
+            "ready": true,
+            "restartCount": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-16T04:10:00Z"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

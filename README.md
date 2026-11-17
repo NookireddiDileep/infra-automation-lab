@@ -60,4 +60,5 @@ templates/     session-note.md · project-readme.md
 |---|---|---|---|
 | Daily 001 | Patch-window drift check (Bash/Ansible/Python/Go) | `daily-labs/day-001-patch-window-drift-check/` | [README](daily-labs/day-001-patch-window-drift-check/README.md) |
 | Daily 002 | Disk-full triage: deleted-but-open files, safe cleanup (Bash/Ansible/Python/Go) | `daily-labs/day-002-disk-full-triage/` | [README](daily-labs/day-002-disk-full-triage/README.md) |
+| Daily 003 | Pod triage: CrashLoop vs OOMKilled vs ImagePull (Bash/Ansible/Python/Go) | `daily-labs/day-003-pod-triage/` | [README](daily-labs/day-003-pod-triage/README.md) |
 | Bash W1 Wed | for / while / while read | `01-bash/week01-foundations/ping_check.sh` | [wed-loops.md](01-bash/week01-foundations/wed-loops.md) |

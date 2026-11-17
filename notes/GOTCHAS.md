@@ -16,3 +16,8 @@ One line per trap: **symptom → cause → fix** (week/day). Reread every Saturd
 | `/database` reported as inside `/data` | Plain string-prefix match on paths | Match `p == m \|\| p` starts with `m + "/"` (whole components), longest wins | Daily 002 |
 | `cmd \| grep -q x` is false although `x` is printed | `pipefail`: `cmd` exits non-zero (or gets SIGPIPE when `grep -q` quits early) | `out=$(cmd) \|\| true; grep -q x <<<"$out"` | Daily 002 |
 | Ansible/Jinja `sort` order differs from `LC_ALL=C sort` | Jinja's `sort` filter is case-insensitive by default | `sort(attribute='p', case_sensitive=true)` | Daily 002 |
+| `oc get pods` shows CrashLoopBackOff for an OOM-killed container | STATUS is the kubelet back-off state, not the cause | Read `status.containerStatuses[].lastState.terminated.reason` / `exitCode` (137 = SIGKILL, often OOM) | Daily 003 |
+| Pod report flags Job pods as "restarting" | `Succeeded` pods keep their old restartCount | Skip phases other than `Running`/`Pending` (and handle `Failed`+`Evicted` separately) | Daily 003 |
+| Same `sort` key gives different order in Bash vs Python/Go | `ns/pod` compared with a separator that sorts above `-`/letters (e.g. `\|`) | Use TAB as the field separator (sorts below every printable char) and `LC_ALL=C` | Daily 003 |
+| `from_json` fails in Ansible when nothing matched | `lookup('template')` returns `None` for an empty render | `(lookup(...) \| default('', true)) \| split(nl)` | Daily 003 |
+| Ansible `lookup('file')` compare with a golden file never matches | The file lookup strips the trailing newline | Re-append it (`~ nl`) before comparing byte for byte | Daily 003 |

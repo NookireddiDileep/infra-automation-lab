@@ -4,7 +4,7 @@ Hands-on automation for enterprise Linux, OpenShift/Kubernetes and (later) GPU/A
 **Bash → Ansible → Python → Go.** Every folder has working code, the notes behind it, and what I learned when it broke.
 
 > Built by a senior RHEL/infra engineer (13+ yrs: enterprise private cloud, HPC, DR) moving into platform engineering on OpenShift.
-> Part of Project AROHAN AI, my long-term hands-on learning track toward AI infrastructure.
+> Part of [Project AROHAN AI](https://github.com/NookireddiDileep/project-arohan-ai), my long-term hands-on learning track toward AI infrastructure.
 
 ---
 
@@ -63,3 +63,15 @@ templates/     session-note.md · project-readme.md
 | Daily 003 | Pod triage: CrashLoop vs OOMKilled vs ImagePull (Bash/Ansible/Python/Go) | `daily-labs/day-003-pod-triage/` | [README](daily-labs/day-003-pod-triage/README.md) |
 | Daily 004 | Pending pod root-cause classifier: capacity vs taint vs selector vs PVC (Bash/Ansible/Python/Go) | `daily-labs/day-004-pending-pod-classifier/` | [README](daily-labs/day-004-pending-pod-classifier/README.md) |
 | Bash W1 Wed | for / while / while read | `01-bash/week01-foundations/ping_check.sh` | [wed-loops.md](01-bash/week01-foundations/wed-loops.md) |
+
+---
+
+## Related repositories
+
+Part of one hands-on platform-engineering portfolio. Start at my [GitHub profile](https://github.com/NookireddiDileep) for the overview.
+
+| Repo | What's there |
+|---|---|
+| [kubernetes-labs](https://github.com/NookireddiDileep/kubernetes-labs) | Upstream Kubernetes on a K3s cluster I built myself: 13 labs, 9 break-and-fix scenarios, timed incident drills |
+| [openshift-lab-records](https://github.com/NookireddiDileep/openshift-lab-records) | OpenShift 4.x on multi-node clusters: Jira-style stories, RCAs, break-fix runbooks, `oc` command bank, OpenShift vs Kubernetes guide |
+| [project-arohan-ai](https://github.com/NookireddiDileep/project-arohan-ai) | AI infrastructure track: Linux internals, OpenShift vs Kubernetes, GPU scheduling, inference reliability, Prometheus SLOs |

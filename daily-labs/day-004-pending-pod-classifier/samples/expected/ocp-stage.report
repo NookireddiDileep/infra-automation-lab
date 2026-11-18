@@ -1,0 +1,9 @@
+pendingtriage report: ocp-stage
+WARN Gated ai/batch-infer-0 nodes=- causes=-
+WARN Capacity ml/notebook-0 nodes=6 causes=Capacity:6 need=nvidia.com/gpu
+WARN Capacity shop/web-canary-7c8d9f6b5-m2n4p nodes=6 causes=Capacity:3,Cordoned:3 need=memory
+WARN Other team-b/scan-job-x7k2p nodes=6 causes=Other:4,Capacity:2 need=cpu
+HINT Capacity: oc describe node | grep -A8 'Allocated resources'; add nodes or shrink requests
+HINT Gated: scheduling gate (Kueue/quota admission?): check the queue and its quota
+HINT Other: read the full event: oc describe pod
+RESULT WARN crit=0 warn=4 pods=5

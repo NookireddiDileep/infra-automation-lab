@@ -36,3 +36,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   `df -h` and `df -i` (space vs inodes) → `du -xh -d 1 | sort -h` on the hot fs → deleted-open files → old rotated logs and caches → work out whether safe cleanup brings it under the threshold or it needs capacity → fix the root cause (logrotate with a `postrotate` signal, retention, quotas, a separate fs) and alert on time-to-full, not just %.
 - **At 1,000 nodes, would you auto-delete files when disks fill?** (Daily 002)  
   Not broadly. Detect with metrics (pull), triage read-only on the hot nodes (push), then allow-listed actions only (truncate known logs of known units, image prune), dry-run first and verify with a second snapshot. Deleting data automatically across a fleet is how you lose a dataset.
+- **A pod has been Pending for an hour. How do you find out why?** (Daily 004)  
+  `oc describe pod` and read the `PodScheduled` condition: it lists, per reason, how many nodes were rejected (`0/12 nodes are available: 6 Insufficient nvidia.com/gpu, 3 had untolerated taint, ...`). Insufficient X means requests don't fit (check allocatable minus allocated, not usage); taint or selector means fix the spec or labels; unbound PVC means look at the StorageClass and binding mode. Only capacity reasons are fixed by adding nodes.
+- **Why is "volume node affinity conflict" different from a nodeSelector problem?** (Daily 004)  
+  The pod's own spec is fine; the PV is pinned to a zone/node set the pod can't reach. It usually comes from `Immediate` binding picking a zone before scheduling. Use `WaitForFirstConsumer` so the volume is provisioned where the pod lands.
+- **Will the Cluster Autoscaler help a Pending pod?** (Daily 004)  
+  Only if the pod is unschedulable for capacity reasons and a node group could fit it. It won't help with a bad `nodeSelector`, a missing toleration, an unbindable PVC or a scheduling gate, so classify first and page on the human-fix classes.

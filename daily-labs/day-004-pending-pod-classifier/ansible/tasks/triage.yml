@@ -1,0 +1,47 @@
+---
+# In:  pods_file (path)
+# Out: triage_report (text, byte-identical to the Bash/Python/Go report), triage_result (OK|WARN|CRIT)
+- name: Load the saved pod list (oc get pods -A -o json)
+  ansible.builtin.set_fact:
+    doc: "{{ lookup('ansible.builtin.file', pods_file) | from_json }}"
+
+- name: Refuse anything that is not a Pod List
+  ansible.builtin.assert:
+    that:
+      - doc is mapping
+      - doc.kind | default('') in ['List', 'PodList']
+      - doc['items'] is defined and doc['items'] is sequence and doc['items'] is not string
+    fail_msg: "{{ pods_file }}: not a Pod List (expected kind List/PodList with items[])"
+    quiet: true
+
+- name: Classify every Pending pod (rank TAB ns/pod TAB class TAB text), sorted
+  ansible.builtin.set_fact:
+    triage_rows: "{{ (lookup('ansible.builtin.template', 'findings.j2') | default('', true)) | split(nl) | select('truthy') | list | sort(case_sensitive=true) }}"
+  vars:
+    tab: "\t"
+    nl: "\n"
+
+- name: Render the report
+  ansible.builtin.set_fact:
+    triage_result: "{{ result }}"
+    triage_report: "{{ (lookup('ansible.builtin.template', 'report.j2') | trim) ~ nl }}"
+  vars:
+    nl: "\n"
+    tab: "\t"
+    report_name: "{{ pods_file | basename | regex_replace('(\\.pods)?\\.json$', '') }}"
+    parts: "{{ triage_rows | map('split', tab) | list }}"
+    classes: "{{ parts | map(attribute=2) | unique | sort(case_sensitive=true) | list }}"
+    crit: "{{ parts | selectattr(0, 'equalto', '0') | list | length }}"
+    warn: "{{ parts | selectattr(0, 'equalto', '1') | list | length }}"
+    result: "{{ 'CRIT' if crit | int > 0 else ('WARN' if warn | int > 0 else 'OK') }}"
+    hints:
+      Capacity: "oc describe node | grep -A8 'Allocated resources'; add nodes or shrink requests"
+      Cordoned: "oc get nodes; finish the maintenance, then oc adm uncordon"
+      Gated: "scheduling gate (Kueue/quota admission?): check the queue and its quota"
+      Other: "read the full event: oc describe pod"
+      Placement: "check pod (anti-)affinity and topologySpreadConstraints against node/zone count"
+      Ports: "hostPort conflict: use a Service/NodePort or drop hostPort"
+      Selector: "oc get nodes --show-labels; fix nodeSelector/affinity or label the nodes"
+      Storage: "oc get pvc,pv,sc; check StorageClass, volumeBindingMode and the PV zone"
+      Taint: "oc describe node | grep Taints; add a toleration or remove the taint"
+      Unparsed: "read the full event: oc describe pod"

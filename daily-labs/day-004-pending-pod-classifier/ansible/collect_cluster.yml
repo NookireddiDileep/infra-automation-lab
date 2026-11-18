@@ -1,0 +1,24 @@
+---
+# Optional, NOT part of `make test` (needs a cluster and the kubernetes.core collection):
+#   ansible-galaxy collection install kubernetes.core
+#   ansible-playbook collect_cluster.yml -e out=../samples/mycluster.pods.json
+# Only Pending pods are fetched (field selector), in the same shape as `oc get pods -A -o json`.
+- name: Snapshot Pending pods from the cluster in KUBECONFIG
+  hosts: localhost
+  gather_facts: false
+  vars:
+    out: "{{ playbook_dir }}/../samples/cluster.pods.json"
+  tasks:
+    - name: List Pending pods in every namespace
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        field_selectors:
+          - status.phase=Pending
+      register: pods
+
+    - name: Save in `oc get pods -A -o json` shape
+      ansible.builtin.copy:
+        content: "{{ {'apiVersion': 'v1', 'kind': 'List', 'metadata': {}, 'items': pods.resources} | to_nice_json }}"
+        dest: "{{ out }}"
+        mode: "0644"

@@ -1,0 +1,522 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {},
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "cart-6c8f7d9b5-x2k4p",
+        "namespace": "shop",
+        "labels": {
+          "app": "cart-6c8f7d9b5"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "cart-6c8f7d9b5",
+            "image": "registry.example.com/shop/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeName": "node-01"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "web-85c9d7f6b-t5h7j",
+        "namespace": "shop",
+        "labels": {
+          "app": "web-85c9d7f6b"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "web-85c9d7f6b",
+            "image": "registry.example.com/shop/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeName": "node-02"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "api-6f8d5c7b9-k4m2n",
+        "namespace": "shop",
+        "labels": {
+          "app": "api-6f8d5c7b9"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "api-6f8d5c7b9",
+            "image": "registry.example.com/shop/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "4",
+                "memory": "16Gi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/12 nodes are available: 9 Insufficient cpu, 7 Insufficient memory, 3 node(s) had untolerated taint {node-role.kubernetes.io/master: }. preemption: 0/12 nodes are available: 12 Preemption is not helpful for scheduling.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "trainer-0",
+        "namespace": "ml",
+        "labels": {
+          "app": "trainer"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "trainer",
+            "image": "registry.example.com/ml/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "8",
+                "memory": "64Gi",
+                "nvidia.com/gpu": "8"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeSelector": {
+          "nvidia.com/gpu.product": "H100-80GB"
+        }
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/12 nodes are available: 6 Insufficient nvidia.com/gpu, 3 node(s) had untolerated taint {node-role.kubernetes.io/infra: }, 3 node(s) didn't match Pod's node affinity/selector. preemption: 0/12 nodes are available: 12 Preemption is not helpful for scheduling.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "vllm-queue-0",
+        "namespace": "ai",
+        "labels": {
+          "app": "vllm-queue"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "vllm-queue",
+            "image": "registry.example.com/ai/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "schedulingGates": [
+          {
+            "name": "kueue.x-k8s.io/admission"
+          }
+        ]
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "SchedulingGated",
+            "message": "Scheduling is blocked due to non-empty scheduling gates",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ledger-db-0",
+        "namespace": "payments",
+        "labels": {
+          "app": "ledger-db"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "ledger-db",
+            "image": "registry.example.com/payments/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "1",
+                "memory": "4Gi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/12 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/12 nodes are available: 12 Preemption is not helpful for scheduling.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "report-7d9f6b8c5-r7s9t",
+        "namespace": "payments",
+        "labels": {
+          "app": "report-7d9f6b8c5"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "report-7d9f6b8c5",
+            "image": "registry.example.com/payments/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeSelector": {
+          "disktype": "nvme"
+        }
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/12 nodes are available: 12 node(s) didn't match Pod's node affinity/selector. preemption: 0/12 nodes are available: 12 Preemption is not helpful for scheduling.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "tools-5b7c9d8f6-d2q8w",
+        "namespace": "platform",
+        "labels": {
+          "app": "tools-5b7c9d8f6"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "tools-5b7c9d8f6",
+            "image": "registry.example.com/platform/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/12 nodes are available: 8 node(s) had volume node affinity conflict, 4 Too many pods. preemption: 0/12 nodes are available: 12 Preemption is not helpful for scheduling.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "etl-sync-8c6d5f7b4-v3x9z",
+        "namespace": "batch",
+        "labels": {
+          "app": "etl-sync-8c6d5f7b4"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "etl-sync-8c6d5f7b4",
+            "image": "registry.example.com/batch/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/12 nodes are available: 2 node(s) were unschedulable, 10 node(s) didn't match pod anti-affinity rules. preemption: 0/12 nodes are available: 12 Preemption is not helpful for scheduling.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "node-exporter-9k2m7",
+        "namespace": "monitoring",
+        "labels": {
+          "app": "node-exporter"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "node-exporter",
+            "image": "registry.example.com/monitoring/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/12 nodes are available: 12 node(s) didn't have free ports for the requested pod ports. preemption: 0/12 nodes are available: 12 Preemption is not helpful for scheduling.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "mystery-0",
+        "namespace": "team-a",
+        "labels": {
+          "app": "mystery"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "mystery",
+            "image": "registry.example.com/team-a/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "pod is in a state the scheduler could not explain",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "checkout-5f6b8d9c7-h4j6k",
+        "namespace": "shop",
+        "labels": {
+          "app": "checkout-5f6b8d9c7"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "checkout-5f6b8d9c7",
+            "image": "registry.example.com/shop/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeName": "node-03"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "etl-nightly-28391-zq7rt",
+        "namespace": "batch",
+        "labels": {
+          "app": "etl-nightly-28391"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "etl-nightly-28391",
+            "image": "registry.example.com/batch/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeName": "node-02"
+      },
+      "status": {
+        "phase": "Succeeded",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+pendingtriage report: ocp-prod
+CRIT Storage payments/ledger-db-0 nodes=12 causes=Storage:12
+CRIT Selector payments/report-7d9f6b8c5-r7s9t nodes=12 causes=Selector:12
+CRIT Storage platform/tools-5b7c9d8f6-d2q8w nodes=12 causes=Storage:8,Capacity:4 need=pods
+WARN Gated ai/vllm-queue-0 nodes=- causes=-
+WARN Placement batch/etl-sync-8c6d5f7b4-v3x9z nodes=12 causes=Placement:10,Cordoned:2
+WARN Capacity ml/trainer-0 nodes=12 causes=Capacity:6,Selector:3,Taint:3 need=nvidia.com/gpu
+WARN Ports monitoring/node-exporter-9k2m7 nodes=12 causes=Ports:12
+WARN Capacity shop/api-6f8d5c7b9-k4m2n nodes=12 causes=Capacity:9,Taint:3 need=cpu+memory
+WARN Unparsed team-a/mystery-0 nodes=- causes=-
+HINT Capacity: oc describe node | grep -A8 'Allocated resources'; add nodes or shrink requests
+HINT Gated: scheduling gate (Kueue/quota admission?): check the queue and its quota
+HINT Placement: check pod (anti-)affinity and topologySpreadConstraints against node/zone count
+HINT Ports: hostPort conflict: use a Service/NodePort or drop hostPort
+HINT Selector: oc get nodes --show-labels; fix nodeSelector/affinity or label the nodes
+HINT Storage: oc get pvc,pv,sc; check StorageClass, volumeBindingMode and the PV zone
+HINT Unparsed: read the full event: oc describe pod
+RESULT CRIT crit=3 warn=6 pods=13

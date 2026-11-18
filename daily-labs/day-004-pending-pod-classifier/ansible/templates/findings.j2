@@ -1,0 +1,66 @@
+{# One line per Pending+unscheduled pod: rank TAB ns/pod TAB class TAB text. Sorted by the caller. No indentation: lstrip_blocks is off. #}
+{% for p in doc['items'] %}
+{% set st = p.status | default({}, true) %}
+{% if st.phase | default('', true) == 'Pending' %}
+{% set key = (p.metadata.namespace | default('?', true)) ~ '/' ~ (p.metadata.name | default('?', true)) %}
+{% set cond = st.conditions | default([], true) | selectattr('type', 'equalto', 'PodScheduled') | selectattr('status', 'equalto', 'False') | list %}
+{% if cond | length > 0 %}
+{% set reason = cond[0].reason | default('', true) %}
+{% set msg = cond[0].message | default('', true) %}
+{% set m = msg | regex_search('^0/([0-9]+) nodes are available: (.*)$', '\\1', '\\2') %}
+{% set v = namespace(cls='Unparsed', nodes='-', causes='-', need='') %}
+{% if reason == 'SchedulingGated' %}
+{% set v.cls = 'Gated' %}
+{% elif m is not none %}
+{% set total = m[0] | int %}
+{% set body = m[1].split('. ')[0] %}
+{% set body = body[:-1] if body.endswith('.') else body %}
+{% set cl = namespace(items=[]) %}
+{% for raw in body.split(', ') if raw != '' %}
+{% set q = raw | regex_search('^([0-9]+) (.*)$', '\\1', '\\2') %}
+{% set cnt = (q[0] | int) if q is not none else (total | int) %}
+{% set txt = q[1] if q is not none else raw %}
+{% set low = txt | lower %}
+{% if 'Insufficient ' in txt or 'Too many pods' in txt %}
+{% set c = 'Capacity' %}
+{% elif low is search('persistentvolume|unbound|volume node affinity') %}
+{% set c = 'Storage' %}
+{% elif 'taint' in low %}
+{% set c = 'Taint' %}
+{% elif low is search('node affinity|node selector') %}
+{% set c = 'Selector' %}
+{% elif low is search('pod affinity|anti-affinity|topology spread') %}
+{% set c = 'Placement' %}
+{% elif 'unschedulable' in low %}
+{% set c = 'Cordoned' %}
+{% elif 'free ports' in low %}
+{% set c = 'Ports' %}
+{% else %}
+{% set c = 'Other' %}
+{% endif %}
+{% set r = txt.split('Insufficient ')[1] if 'Insufficient ' in txt else ('pods' if 'Too many pods' in txt else '') %}
+{% set cl.items = cl.items + [{'c': c, 'n': cnt, 'r': r}] %}
+{% endfor %}
+{% if cl.items | length > 0 %}
+{# Insufficient clauses may count one node twice (cpu AND memory): max. Every other reason is once per node: sum. #}
+{% set agg = namespace(rows=[]) %}
+{% for g in cl.items | groupby('c') %}
+{% set counts = g.list | map(attribute='n') | list %}
+{% set agg.rows = agg.rows + [{'c': g.grouper, 'n': (counts | max) if g.grouper == 'Capacity' else (counts | sum)}] %}
+{% endfor %}
+{% set causes = agg.rows | sort(attribute='c', case_sensitive=true) | sort(attribute='n', reverse=true) %}
+{% set tx = namespace(parts=[]) %}
+{% for c in causes %}
+{% set tx.parts = tx.parts + [c.c ~ ':' ~ c.n] %}
+{% endfor %}
+{% set v.cls = causes[0].c %}
+{% set v.nodes = total | string %}
+{% set v.causes = tx.parts | join(',') %}
+{% set v.need = cl.items | map(attribute='r') | select | unique | sort(case_sensitive=true) | join('+') %}
+{% endif %}
+{% endif %}
+{% set rank = 0 if v.cls in ['Selector', 'Storage', 'Taint'] else 1 %}
+{{ rank }}{{ tab }}{{ key }}{{ tab }}{{ v.cls }}{{ tab }}{{ 'CRIT' if rank == 0 else 'WARN' }} {{ v.cls }} {{ key }} nodes={{ v.nodes }} causes={{ v.causes }}{{ (' need=' ~ v.need) if v.need != '' else '' }}
+{% endif %}
+{% endif %}
+{% endfor %}

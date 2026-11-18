@@ -1,0 +1,31 @@
+---
+# Self-test: the Ansible report must be byte-identical to the golden files that Bash, Python and Go also match.
+- name: Compare against samples/expected
+  hosts: localhost
+  gather_facts: false
+  vars:
+    cases:
+      ocp-prod: CRIT
+      ocp-stage: WARN
+      ocp-dev: OK
+  tasks:
+    - name: Triage and compare each sample
+      ansible.builtin.include_tasks: tasks/check_sample.yml
+      vars:
+        pods_file: "{{ playbook_dir }}/../samples/{{ item.key }}.pods.json"
+        nl: "\n"
+        # the file lookup strips the trailing newline; put it back so the comparison is byte-exact
+        golden: "{{ lookup('ansible.builtin.file', playbook_dir ~ '/../samples/expected/' ~ item.key ~ '.report') ~ nl }}"
+        want_result: "{{ item.value }}"
+      loop: "{{ cases | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: A non-Pod document must be refused
+      block:
+        - ansible.builtin.include_tasks: tasks/triage.yml
+          vars:
+            pods_file: "{{ playbook_dir }}/../samples/expected/ocp-dev.report"
+      rescue:
+        - ansible.builtin.debug:
+            msg: "ok: refused a non-Pod-List input"

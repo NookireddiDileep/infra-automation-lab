@@ -1,0 +1,202 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {},
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "web-85c9d7f6b-t5h7j",
+        "namespace": "shop",
+        "labels": {
+          "app": "web-85c9d7f6b"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "web-85c9d7f6b",
+            "image": "registry.example.com/shop/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeName": "node-01"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "web-canary-7c8d9f6b5-m2n4p",
+        "namespace": "shop",
+        "labels": {
+          "app": "web-canary-7c8d9f6b5"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "web-canary-7c8d9f6b5",
+            "image": "registry.example.com/shop/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/6 nodes are available: 3 Insufficient memory, 3 node(s) were unschedulable. preemption: 0/6 nodes are available: 6 Preemption is not helpful for scheduling.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "notebook-0",
+        "namespace": "ml",
+        "labels": {
+          "app": "notebook"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "notebook",
+            "image": "registry.example.com/ml/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "2",
+                "memory": "8Gi",
+                "nvidia.com/gpu": "1"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/6 nodes are available: 6 Insufficient nvidia.com/gpu.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "scan-job-x7k2p",
+        "namespace": "team-b",
+        "labels": {
+          "app": "scan-job"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "scan-job",
+            "image": "registry.example.com/team-b/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/6 nodes are available: 4 node(s) had an odd problem the parser does not know, 2 Insufficient cpu. preemption: 0/6 nodes are available: 6 Preemption is not helpful for scheduling.",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "batch-infer-0",
+        "namespace": "ai",
+        "labels": {
+          "app": "batch-infer"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "batch-infer",
+            "image": "registry.example.com/ai/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "SchedulingGated",
+            "message": "Scheduling is blocked due to non-empty scheduling gates",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    }
+  ]
+}

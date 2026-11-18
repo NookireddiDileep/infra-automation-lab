@@ -1,0 +1,159 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {},
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "web-85c9d7f6b-t5h7j",
+        "namespace": "shop",
+        "labels": {
+          "app": "web-85c9d7f6b"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "web-85c9d7f6b",
+            "image": "registry.example.com/shop/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeName": "node-01"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "cart-6c8f7d9b5-x2k4p",
+        "namespace": "shop",
+        "labels": {
+          "app": "cart-6c8f7d9b5"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "cart-6c8f7d9b5",
+            "image": "registry.example.com/shop/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeName": "node-01"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "api-5d7b9c4f8-q9w2z",
+        "namespace": "shop",
+        "labels": {
+          "app": "api-5d7b9c4f8"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "api-5d7b9c4f8",
+            "image": "registry.example.com/shop/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeName": "node-02"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "etl-nightly-28391-zq7rt",
+        "namespace": "batch",
+        "labels": {
+          "app": "etl-nightly-28391"
+        },
+        "creationTimestamp": "2026-11-17T08:00:00Z"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "etl-nightly-28391",
+            "image": "registry.example.com/batch/app:1.0",
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            }
+          }
+        ],
+        "schedulerName": "default-scheduler",
+        "nodeName": "node-01"
+      },
+      "status": {
+        "phase": "Succeeded",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastTransitionTime": "2026-11-17T08:00:01Z"
+          }
+        ]
+      }
+    }
+  ]
+}

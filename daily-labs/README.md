@@ -12,6 +12,7 @@ Every day there's one realistic infra scenario (RHEL ops → OpenShift/Kubernete
 | [002](day-002-disk-full-triage/) | 2026-11-16 | Disk-full triage: `df` says full, `du` disagrees (deleted-but-open files, safe cleanup) | 1 · Linux ops | ✅✅✅✅ | ⬜ Bash |
 | [003](day-003-pod-triage/) | 2026-11-17 | Pod triage: CrashLoopBackOff vs OOMKilled vs ImagePullBackOff, with the reason and the first command | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
 | [004](day-004-pending-pod-classifier/) | 2026-11-18 | Pending pod root-cause classifier: Insufficient vs taint vs selector vs PVC, from the scheduler message | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
+| [005](day-005-namespace-onboarding-check/) | 2026-11-19 | Namespace onboarding check: quota, limits, RBAC and NetworkPolicy vs one spec (missing, drift, leaked `cluster-admin`) | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
 
 ### Folder convention
 ```

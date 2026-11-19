@@ -1,0 +1,2 @@
+onboardcheck report: ocp-dev
+RESULT OK crit=0 warn=0 namespaces=3 clean=3

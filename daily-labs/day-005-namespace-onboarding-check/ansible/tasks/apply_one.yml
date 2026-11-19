@@ -1,0 +1,47 @@
+---
+# In: onboard (one entry of spec.namespaces), tiers
+- name: Apply every object for {{ onboard['name'] }}
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ item }}"
+  loop:
+    - {apiVersion: v1, kind: Namespace, metadata: {name: "{{ onboard['name'] }}"}}
+    - apiVersion: v1
+      kind: ResourceQuota
+      metadata: {name: onboarding-quota, namespace: "{{ onboard['name'] }}"}
+      spec:
+        hard:
+          requests.cpu: "{{ tiers[onboard['tier']].cpu }}"
+          requests.memory: "{{ tiers[onboard['tier']].memory }}"
+          pods: "{{ tiers[onboard['tier']].pods }}"
+    - apiVersion: v1
+      kind: LimitRange
+      metadata: {name: onboarding-limits, namespace: "{{ onboard['name'] }}"}
+      spec:
+        limits:
+          - type: Container
+            default: {cpu: "{{ tiers[onboard['tier']].lcpu }}", memory: "{{ tiers[onboard['tier']].lmem }}"}
+            defaultRequest: {cpu: 100m, memory: 128Mi}
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata: {name: onboarding-admin, namespace: "{{ onboard['name'] }}"}
+      roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: admin}
+      subjects: [{apiGroup: rbac.authorization.k8s.io, kind: Group, name: "{{ onboard['admin_group'] }}"}]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata: {name: onboarding-view, namespace: "{{ onboard['name'] }}"}
+      roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: view}
+      subjects: [{apiGroup: rbac.authorization.k8s.io, kind: Group, name: "{{ onboard['viewer_group'] }}"}]
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata: {name: default-deny-ingress, namespace: "{{ onboard['name'] }}"}
+      spec: {podSelector: {}, policyTypes: [Ingress]}
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata: {name: allow-from-openshift-ingress, namespace: "{{ onboard['name'] }}"}
+      spec:
+        podSelector: {}
+        policyTypes: [Ingress]
+        ingress: [{from: [{namespaceSelector: {matchLabels: {policy-group.network.openshift.io/ingress: ""}}}]}]
+  loop_control:
+    label: "{{ item.kind }}/{{ item.metadata.name }}"

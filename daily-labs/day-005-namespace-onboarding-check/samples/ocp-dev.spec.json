@@ -1,0 +1,22 @@
+{
+  "namespaces": [
+    {
+      "name": "sandbox",
+      "tier": "small",
+      "admin_group": "sandbox-admins",
+      "viewer_group": "sandbox-viewers"
+    },
+    {
+      "name": "demo",
+      "tier": "small",
+      "admin_group": "demo-admins",
+      "viewer_group": "demo-viewers"
+    },
+    {
+      "name": "ci",
+      "tier": "medium",
+      "admin_group": "ci-admins",
+      "viewer_group": "ci-viewers"
+    }
+  ]
+}

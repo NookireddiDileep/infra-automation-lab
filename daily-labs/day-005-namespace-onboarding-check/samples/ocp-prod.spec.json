@@ -1,0 +1,40 @@
+{
+  "namespaces": [
+    {
+      "name": "payments",
+      "tier": "medium",
+      "admin_group": "payments-admins",
+      "viewer_group": "payments-viewers"
+    },
+    {
+      "name": "ledger",
+      "tier": "large",
+      "admin_group": "ledger-admins",
+      "viewer_group": "ledger-viewers"
+    },
+    {
+      "name": "ml-platform",
+      "tier": "large",
+      "admin_group": "ml-platform-admins",
+      "viewer_group": "ml-platform-viewers"
+    },
+    {
+      "name": "reports",
+      "tier": "small",
+      "admin_group": "reports-admins",
+      "viewer_group": "reports-viewers"
+    },
+    {
+      "name": "ingest",
+      "tier": "small",
+      "admin_group": "ingest-admins",
+      "viewer_group": "ingest-viewers"
+    },
+    {
+      "name": "checkout",
+      "tier": "medium",
+      "admin_group": "checkout-admins",
+      "viewer_group": "checkout-viewers"
+    }
+  ]
+}

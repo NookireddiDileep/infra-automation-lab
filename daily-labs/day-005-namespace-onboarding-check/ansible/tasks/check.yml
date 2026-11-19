@@ -1,0 +1,61 @@
+---
+# In:  spec_file, cluster_file (paths)
+# Out: check_report (text, byte-identical to the Bash/Python/Go report), check_result (OK|WARN|CRIT)
+- name: Load the onboarding spec and the saved cluster snapshot
+  ansible.builtin.set_fact:
+    spec: "{{ lookup('ansible.builtin.file', spec_file) | from_json }}"
+    doc: "{{ lookup('ansible.builtin.file', cluster_file) | from_json }}"
+
+- name: Refuse a bad spec
+  ansible.builtin.assert:
+    that:
+      - spec is mapping
+      - spec['namespaces'] | default([]) is sequence
+      - spec['namespaces'] | default([]) is not string
+      - spec['namespaces'] | default([]) | length > 0
+    fail_msg: "{{ spec_file }}: spec needs a non-empty namespaces[]"
+    quiet: true
+
+- name: Refuse a namespace entry without name, tier, admin_group and viewer_group
+  ansible.builtin.assert:
+    that:
+      - item is mapping
+      - item['name'] | default('') is string and item['name'] | default('') | length > 0
+      - item['tier'] | default('') in ['small', 'medium', 'large']
+      - item['admin_group'] | default('') is string and item['admin_group'] | default('') | length > 0
+      - item['viewer_group'] | default('') is string and item['viewer_group'] | default('') | length > 0
+    fail_msg: "{{ spec_file }}: every namespace needs name, tier (small|medium|large), admin_group, viewer_group"
+    quiet: true
+  loop: "{{ spec['namespaces'] }}"
+  loop_control:
+    label: "{{ item['name'] | default('?') if item is mapping else '?' }}"
+
+- name: Refuse anything that is not a List snapshot
+  ansible.builtin.assert:
+    that:
+      - doc is mapping
+      - doc['kind'] | default('') == 'List'
+      - doc['items'] is defined and doc['items'] is sequence and doc['items'] is not string
+    fail_msg: "{{ cluster_file }}: not a List (expected kind List with items[])"
+    quiet: true
+
+- name: Check every namespace (findings in emission order), then sort stably by namespace and by severity
+  ansible.builtin.set_fact:
+    check_rows: "{{ (lookup('ansible.builtin.template', 'findings.j2') | from_json) | sort(attribute='ns', case_sensitive=true) | sort(attribute='rank') }}"
+
+- name: Render the report
+  ansible.builtin.set_fact:
+    check_result: "{{ result }}"
+    check_report: "{{ (lookup('ansible.builtin.template', 'report.j2') | trim) ~ nl }}"
+  vars:
+    nl: "\n"
+    rows: "{{ check_rows }}"
+    report_name: "{{ cluster_file | basename | regex_replace('(\\.cluster)?\\.json$', '') }}"
+    classes: "{{ rows | map(attribute='cls') | unique | sort(case_sensitive=true) | list }}"
+    crit: "{{ rows | selectattr('rank', 'equalto', 0) | list | length }}"
+    warn: "{{ rows | selectattr('rank', 'equalto', 1) | list | length }}"
+    result: "{{ 'CRIT' if crit | int > 0 else ('WARN' if warn | int > 0 else 'OK') }}"
+    hints:
+      DRIFT: "re-apply the spec (ansible-playbook apply_onboarding.yml), then re-run this check"
+      EXTRA: "oc get rolebindings -A | grep -i admin; remove it or record the exception"
+      MISSING: "onboarding never ran or was reverted: apply the spec (ansible-playbook apply_onboarding.yml)"

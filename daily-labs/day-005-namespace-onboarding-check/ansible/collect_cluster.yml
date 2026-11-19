@@ -1,0 +1,31 @@
+---
+# Optional, NOT part of `make test` (needs a cluster and the kubernetes.core collection):
+#   ansible-galaxy collection install kubernetes.core
+#   ansible-playbook collect_cluster.yml -e out=../samples/mycluster.cluster.json
+# Snapshots only what the check reads, in the same shape as `oc get ns,resourcequota,limitrange,rolebinding,networkpolicy -A -o json`.
+- name: Snapshot onboarding objects from the cluster in KUBECONFIG
+  hosts: localhost
+  gather_facts: false
+  vars:
+    out: "{{ playbook_dir }}/../samples/cluster.cluster.json"
+    kinds:
+      - {api_version: v1, kind: Namespace}
+      - {api_version: v1, kind: ResourceQuota}
+      - {api_version: v1, kind: LimitRange}
+      - {api_version: rbac.authorization.k8s.io/v1, kind: RoleBinding}
+      - {api_version: networking.k8s.io/v1, kind: NetworkPolicy}
+  tasks:
+    - name: List each kind in every namespace
+      kubernetes.core.k8s_info:
+        api_version: "{{ item.api_version }}"
+        kind: "{{ item.kind }}"
+      loop: "{{ kinds }}"
+      loop_control:
+        label: "{{ item.kind }}"
+      register: found
+
+    - name: Save in `oc get ... -A -o json` shape
+      ansible.builtin.copy:
+        content: "{{ {'apiVersion': 'v1', 'kind': 'List', 'metadata': {}, 'items': found.results | map(attribute='resources') | flatten} | to_nice_json }}"
+        dest: "{{ out }}"
+        mode: "0644"

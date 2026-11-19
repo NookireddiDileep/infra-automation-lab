@@ -1,0 +1,38 @@
+---
+# Self-test: the Ansible report must be byte-identical to the golden files that Bash, Python and Go also match.
+- name: Compare against samples/expected
+  hosts: localhost
+  gather_facts: false
+  vars:
+    cases:
+      ocp-prod: CRIT
+      ocp-stage: WARN
+      ocp-dev: OK
+  tasks:
+    - name: Check and compare each sample
+      ansible.builtin.include_tasks: tasks/check_sample.yml
+      vars:
+        spec_file: "{{ playbook_dir }}/../samples/{{ case.key }}.spec.json"
+        cluster_file: "{{ playbook_dir }}/../samples/{{ case.key }}.cluster.json"
+        nl: "\n"
+        # the file lookup strips the trailing newline; put it back so the comparison is byte-exact
+        golden: "{{ lookup('ansible.builtin.file', playbook_dir ~ '/../samples/expected/' ~ case.key ~ '.report') ~ nl }}"
+        want_result: "{{ case.value }}"
+      loop: "{{ cases | dict2items }}"
+      loop_control:
+        loop_var: case        # not "item": the included check.yml has its own item loop
+        label: "{{ case.key }}"
+
+    - name: A spec used as the cluster snapshot must be refused
+      block:
+        - ansible.builtin.include_tasks: tasks/check.yml
+          vars:
+            spec_file: "{{ playbook_dir }}/../samples/ocp-dev.spec.json"
+            cluster_file: "{{ playbook_dir }}/../samples/ocp-dev.spec.json"
+        - ansible.builtin.fail:
+            msg: "a spec was accepted as a cluster snapshot"
+      rescue:
+        - ansible.builtin.assert:
+            that: "'not a List' in ansible_failed_result.msg"
+            quiet: true
+            success_msg: "ok: refused a spec used as a snapshot"

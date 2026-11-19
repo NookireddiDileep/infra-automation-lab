@@ -1,0 +1,110 @@
+{# Findings as a JSON list of {rank, ns, cls, text} in emission order (sorted by the caller, stably). trim_blocks is on, lstrip_blocks is off. #}
+{% set tiers = {'small': ['4', '8Gi', '20', '500m', '512Mi'], 'medium': ['16', '32Gi', '60', '1', '1Gi'], 'large': ['64', '128Gi', '200', '2', '2Gi']} %}
+{% set units = {'': 1, 'Ki': 1024, 'Mi': 1048576, 'Gi': 1073741824, 'Ti': 1099511627776} %}
+{# cpu -> millicores, memory -> bytes, int -> int; 'x' = not a valid quantity (anything but a string is invalid) #}
+{% macro qty(kind, v) -%}
+{%- if v is not string -%}x
+{%- elif kind == 'cpu' -%}
+{%- if v is match('^([0-9]+m|[0-9]+(\\.[0-9]{1,3})?)$') -%}{{ (v[:-1] | int) if v.endswith('m') else ((v | float * 1000) | round | int) }}{%- else -%}x{%- endif -%}
+{%- elif kind == 'mem' -%}
+{%- if v is match('^[0-9]+(Ki|Mi|Gi|Ti)?$') -%}{{ (v | regex_search('^[0-9]+') | int) * units[v | regex_replace('^[0-9]+', '')] }}{%- else -%}x{%- endif -%}
+{%- else -%}
+{%- if v is match('^[0-9]+$') -%}{{ v | int }}{%- else -%}x{%- endif -%}
+{%- endif -%}
+{%- endmacro %}
+{% macro same(kind, want, have) -%}
+{%- set w = qty(kind, want) | trim -%}{%- set h = qty(kind, have) | trim -%}
+{{- 'y' if (w != 'x' and h != 'x' and w == h) else 'n' -}}
+{%- endmacro %}
+{% macro subj(subjects) -%}
+{%- set p = namespace(l=[]) -%}
+{%- for s in (subjects | default([], true)) if s is mapping -%}
+{%- set p.l = p.l + [(s['kind'] | default('?', true)) ~ ':' ~ (s['name'] | default('?', true))] -%}
+{%- endfor -%}
+{{- p.l | join(',') if p.l else '-' -}}
+{%- endmacro %}
+{% macro add(acc, rank, ns, cls, obj, detail='') -%}
+{%- set acc.rows = acc.rows + [{'rank': rank, 'ns': ns, 'cls': cls, 'text': ('CRIT' if rank == 0 else 'WARN') ~ ' ' ~ ns ~ ' ' ~ cls ~ ' ' ~ obj ~ ((' ' ~ detail) if detail != '' else '')}] -%}
+{%- endmacro %}
+{% set acc = namespace(rows=[]) %}
+{# index every object once as {kind, name, ns, obj}: dotted selectattr chains blow up on objects without metadata.namespace #}
+{% set idx = namespace(l=[]) %}
+{% for it in doc['items'] | select('mapping') %}
+{% set md = it['metadata'] | default({}, true) %}
+{% set k = it['kind'] | default('', true) %}
+{% set idx.l = idx.l + [{'kind': k, 'name': md['name'] | default('', true), 'ns': (md['name'] if k == 'Namespace' else md['namespace']) | default('', true), 'obj': it}] %}
+{% endfor %}
+{% for n in spec['namespaces'] %}
+{% set ns = n['name'] %}
+{% set t = tiers[n['tier']] %}
+{% set mine = idx.l | selectattr('ns', 'equalto', ns) | list %}
+{% if (mine | selectattr('kind', 'equalto', 'Namespace') | list | length) == 0 %}
+{% set _ = add(acc, 0, ns, 'MISSING', 'Namespace/' ~ ns) %}
+{% else %}
+{# --- ResourceQuota: a missing key is unbounded (CRIT), a different value is drift (WARN) #}
+{% set q = mine | selectattr('kind', 'equalto', 'ResourceQuota') | selectattr('name', 'equalto', 'onboarding-quota') | list %}
+{% if q | length == 0 %}
+{% set _ = add(acc, 0, ns, 'MISSING', 'ResourceQuota/onboarding-quota') %}
+{% else %}
+{% set hard = (q[0]['obj']['spec'] | default({}, true))['hard'] | default({}, true) %}
+{% for c in [['requests.cpu', t[0], 'cpu'], ['requests.memory', t[1], 'mem'], ['pods', t[2], 'int']] %}
+{% if c[0] not in hard %}
+{% set _ = add(acc, 0, ns, 'DRIFT', 'ResourceQuota/onboarding-quota', c[0] ~ ' want=' ~ c[1] ~ ' have=-') %}
+{% elif same(c[2], c[1], hard[c[0]]) | trim != 'y' %}
+{% set _ = add(acc, 1, ns, 'DRIFT', 'ResourceQuota/onboarding-quota', c[0] ~ ' want=' ~ c[1] ~ ' have=' ~ hard[c[0]]) %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{# --- LimitRange default container limits #}
+{% set l = mine | selectattr('kind', 'equalto', 'LimitRange') | selectattr('name', 'equalto', 'onboarding-limits') | list %}
+{% if l | length == 0 %}
+{% set _ = add(acc, 1, ns, 'MISSING', 'LimitRange/onboarding-limits') %}
+{% else %}
+{% set cont = ((l[0]['obj']['spec'] | default({}, true))['limits'] | default([], true)) | selectattr('type', 'equalto', 'Container') | list %}
+{% set dflt = (cont[0]['default'] | default({}, true)) if cont | length > 0 else {} %}
+{% for c in [['default.cpu', t[3], 'cpu', 'cpu'], ['default.memory', t[4], 'mem', 'memory']] %}
+{% if dflt[c[3]] is not defined or dflt[c[3]] is none %}
+{% set _ = add(acc, 1, ns, 'DRIFT', 'LimitRange/onboarding-limits', c[0] ~ ' want=' ~ c[1] ~ ' have=-') %}
+{% elif same(c[2], c[1], dflt[c[3]]) | trim != 'y' %}
+{% set _ = add(acc, 1, ns, 'DRIFT', 'LimitRange/onboarding-limits', c[0] ~ ' want=' ~ c[1] ~ ' have=' ~ dflt[c[3]]) %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{# --- RBAC: the two onboarding bindings, then any cluster-admin binding in the namespace #}
+{% for c in [['onboarding-admin', 'admin', n['admin_group']], ['onboarding-view', 'view', n['viewer_group']]] %}
+{% set rb = mine | selectattr('kind', 'equalto', 'RoleBinding') | selectattr('name', 'equalto', c[0]) | list %}
+{% if rb | length == 0 %}
+{% set _ = add(acc, 0, ns, 'MISSING', 'RoleBinding/' ~ c[0]) %}
+{% else %}
+{% set have = (rb[0]['obj']['roleRef'] | default({}, true))['name'] | default('-', true) %}
+{% if have != c[1] %}
+{% set _ = add(acc, 0, ns, 'DRIFT', 'RoleBinding/' ~ c[0], 'roleRef want=' ~ c[1] ~ ' have=' ~ have) %}
+{% endif %}
+{% set found = rb[0]['obj']['subjects'] | default([], true) | selectattr('kind', 'equalto', 'Group') | selectattr('name', 'equalto', c[2]) | list %}
+{% if found | length == 0 %}
+{% set _ = add(acc, 0, ns, 'DRIFT', 'RoleBinding/' ~ c[0], 'subjects want=Group:' ~ c[2] ~ ' have=' ~ subj(rb[0]['obj']['subjects'])) %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% for e in mine | selectattr('kind', 'equalto', 'RoleBinding') %}
+{% set rb = e['obj'] %}
+{% if ((rb['roleRef'] | default({}, true))['name'] | default('', true)) == 'cluster-admin' %}
+{% set _ = add(acc, 0, ns, 'EXTRA', 'RoleBinding/' ~ (e['name'] | default('?', true)), 'cluster-admin to ' ~ subj(rb['subjects'])) %}
+{% endif %}
+{% endfor %}
+{# --- NetworkPolicy: default-deny must really deny everything; the ingress allow is a WARN #}
+{% set dp = mine | selectattr('kind', 'equalto', 'NetworkPolicy') | selectattr('name', 'equalto', 'default-deny-ingress') | list %}
+{% if dp | length == 0 %}
+{% set _ = add(acc, 0, ns, 'MISSING', 'NetworkPolicy/default-deny-ingress') %}
+{% else %}
+{% set sp = dp[0]['obj']['spec'] | default({}, true) %}
+{% if not ((sp['podSelector'] | default({}, true)) == {} and (sp['ingress'] | default([], true) | length) == 0 and 'Ingress' in (sp['policyTypes'] | default([], true))) %}
+{% set _ = add(acc, 0, ns, 'DRIFT', 'NetworkPolicy/default-deny-ingress', 'not deny-all') %}
+{% endif %}
+{% endif %}
+{% if (mine | selectattr('kind', 'equalto', 'NetworkPolicy') | selectattr('name', 'equalto', 'allow-from-openshift-ingress') | list | length) == 0 %}
+{% set _ = add(acc, 1, ns, 'MISSING', 'NetworkPolicy/allow-from-openshift-ingress') %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{{ acc.rows | to_json }}

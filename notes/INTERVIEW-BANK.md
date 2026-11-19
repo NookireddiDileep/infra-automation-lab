@@ -42,3 +42,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   The pod's own spec is fine; the PV is pinned to a zone/node set the pod can't reach. It usually comes from `Immediate` binding picking a zone before scheduling. Use `WaitForFirstConsumer` so the volume is provisioned where the pod lands.
 - **Will the Cluster Autoscaler help a Pending pod?** (Daily 004)  
   Only if the pod is unschedulable for capacity reasons and a node group could fit it. It won't help with a bad `nodeSelector`, a missing toleration, an unbindable PVC or a scheduling gate, so classify first and page on the human-fix classes.
+- **How do you onboard a new team onto a shared OpenShift cluster, and how do you know it stayed that way?** (Daily 005)  
+  A project template or GitOps bundle creates the namespace with a ResourceQuota, LimitRange, RoleBindings to IdP groups and a default-deny NetworkPolicy plus explicit allows. Then an independent read-only check compares live objects with the spec: MISSING, DRIFT and EXTRA (a stray `cluster-admin`). Unbounded or privilege-widening drift is CRIT, cosmetic drift is WARN. Admission policy (Kyverno/Gatekeeper) can then block the worst edits up front.
+- **What does a ResourceQuota do to a pod that sets no limits, and what fixes it?** (Daily 005)  
+  When the quota tracks `requests.*` or `limits.*`, the API rejects pods that don't set those values. A LimitRange with default requests/limits fills them in, so the two objects always go together.
+- **A default-deny NetworkPolicy is applied but pods still receive traffic. What do you check?** (Daily 005)  
+  Whether the CNI enforces NetworkPolicy at all (kind's default does not), whether `podSelector` matches the pods, and whether someone added an ingress rule: `ingress: [{}]` means allow everything. Policies are additive allow-lists, so one permissive policy overrides the deny-all.

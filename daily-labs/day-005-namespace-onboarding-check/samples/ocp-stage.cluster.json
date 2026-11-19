@@ -1,0 +1,244 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {},
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "search",
+        "labels": {
+          "kubernetes.io/metadata.name": "search"
+        }
+      },
+      "status": {
+        "phase": "Active"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "onboarding-quota",
+        "namespace": "search"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "16",
+          "requests.memory": "32Gi",
+          "pods": "75"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "LimitRange",
+      "metadata": {
+        "name": "onboarding-limits",
+        "namespace": "search"
+      },
+      "spec": {
+        "limits": [
+          {
+            "type": "Container",
+            "default": {
+              "cpu": "1",
+              "memory": "2Gi"
+            },
+            "defaultRequest": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-admin",
+        "namespace": "search"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "admin"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "search-admins",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-view",
+        "namespace": "search"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "view"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "search-viewers",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny-ingress",
+        "namespace": "search"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "allow-from-openshift-ingress",
+        "namespace": "search"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "policy-group.network.openshift.io/ingress": ""
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "batch",
+        "labels": {
+          "kubernetes.io/metadata.name": "batch"
+        }
+      },
+      "status": {
+        "phase": "Active"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "onboarding-quota",
+        "namespace": "batch"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "4",
+          "requests.memory": "8Gi",
+          "pods": "20"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "LimitRange",
+      "metadata": {
+        "name": "onboarding-limits",
+        "namespace": "batch"
+      },
+      "spec": {
+        "limits": [
+          {
+            "type": "Container",
+            "default": {
+              "cpu": "500m",
+              "memory": "512Mi"
+            },
+            "defaultRequest": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-admin",
+        "namespace": "batch"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "admin"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "batch-admins",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-view",
+        "namespace": "batch"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "view"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "batch-viewers",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny-ingress",
+        "namespace": "batch"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ]
+      }
+    }
+  ]
+}

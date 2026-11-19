@@ -1,0 +1,685 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {},
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "payments",
+        "labels": {
+          "kubernetes.io/metadata.name": "payments"
+        }
+      },
+      "status": {
+        "phase": "Active"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "onboarding-quota",
+        "namespace": "payments"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "16000m",
+          "requests.memory": "32768Mi",
+          "pods": "60"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "LimitRange",
+      "metadata": {
+        "name": "onboarding-limits",
+        "namespace": "payments"
+      },
+      "spec": {
+        "limits": [
+          {
+            "type": "Container",
+            "default": {
+              "cpu": "1",
+              "memory": "1Gi"
+            },
+            "defaultRequest": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-admin",
+        "namespace": "payments"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "admin"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "payments-admins",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-view",
+        "namespace": "payments"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "view"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "payments-viewers",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny-ingress",
+        "namespace": "payments"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "allow-from-openshift-ingress",
+        "namespace": "payments"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "policy-group.network.openshift.io/ingress": ""
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "ledger",
+        "labels": {
+          "kubernetes.io/metadata.name": "ledger"
+        }
+      },
+      "status": {
+        "phase": "Active"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "onboarding-quota",
+        "namespace": "ledger"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "64",
+          "requests.memory": "128Gi",
+          "pods": "200"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "LimitRange",
+      "metadata": {
+        "name": "onboarding-limits",
+        "namespace": "ledger"
+      },
+      "spec": {
+        "limits": [
+          {
+            "type": "Container",
+            "default": {
+              "cpu": "2",
+              "memory": "2Gi"
+            },
+            "defaultRequest": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-admin",
+        "namespace": "ledger"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "admin"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "ledger-admins",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-view",
+        "namespace": "ledger"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "view"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "ledger-viewers",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny-ingress",
+        "namespace": "ledger"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "ipBlock": {
+                  "cidr": "10.0.0.0/8"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "allow-from-openshift-ingress",
+        "namespace": "ledger"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "policy-group.network.openshift.io/ingress": ""
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "temp-debug",
+        "namespace": "ledger"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "cluster-admin"
+      },
+      "subjects": [
+        {
+          "kind": "User",
+          "name": "ops-contractor-01",
+          "apiGroup": "rbac.authorization.k8s.io"
+        },
+        {
+          "kind": "Group",
+          "name": "ledger-debuggers",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "ml-platform",
+        "labels": {
+          "kubernetes.io/metadata.name": "ml-platform"
+        }
+      },
+      "status": {
+        "phase": "Active"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "onboarding-quota",
+        "namespace": "ml-platform"
+      },
+      "spec": {
+        "hard": {
+          "requests.memory": "256Gi",
+          "pods": "200"
+        }
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-admin",
+        "namespace": "ml-platform"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "admin"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "ml-platform-admins",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-view",
+        "namespace": "ml-platform"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "view"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "ml-platform-viewers",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny-ingress",
+        "namespace": "ml-platform"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "allow-from-openshift-ingress",
+        "namespace": "ml-platform"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "policy-group.network.openshift.io/ingress": ""
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "reports",
+        "labels": {
+          "kubernetes.io/metadata.name": "reports"
+        }
+      },
+      "status": {
+        "phase": "Active"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "onboarding-quota",
+        "namespace": "reports"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "4",
+          "requests.memory": "8Gi",
+          "pods": "20"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "LimitRange",
+      "metadata": {
+        "name": "onboarding-limits",
+        "namespace": "reports"
+      },
+      "spec": {
+        "limits": [
+          {
+            "type": "Container",
+            "default": {
+              "cpu": "500m",
+              "memory": "512Mi"
+            },
+            "defaultRequest": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-admin",
+        "namespace": "reports"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "admin"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "platform-all-staff",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-view",
+        "namespace": "reports"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "view"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "reports-viewers",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny-ingress",
+        "namespace": "reports"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "ingest",
+        "labels": {
+          "kubernetes.io/metadata.name": "ingest"
+        }
+      },
+      "status": {
+        "phase": "Active"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "onboarding-quota",
+        "namespace": "ingest"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "4",
+          "requests.memory": "8Gi",
+          "pods": "20"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "LimitRange",
+      "metadata": {
+        "name": "onboarding-limits",
+        "namespace": "ingest"
+      },
+      "spec": {
+        "limits": [
+          {
+            "type": "Container",
+            "default": {
+              "cpu": "500m",
+              "memory": "512Mi"
+            },
+            "defaultRequest": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-admin",
+        "namespace": "ingest"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "admin"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "ingest-admins",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "onboarding-view",
+        "namespace": "ingest"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "view"
+      },
+      "subjects": [
+        {
+          "kind": "Group",
+          "name": "ingest-viewers",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny-ingress",
+        "namespace": "ingest"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "allow-from-openshift-ingress",
+        "namespace": "ingest"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "policy-group.network.openshift.io/ingress": ""
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "kube-extra",
+        "labels": {
+          "kubernetes.io/metadata.name": "kube-extra"
+        }
+      },
+      "status": {
+        "phase": "Active"
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "emergency",
+        "namespace": "kube-extra"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "cluster-admin"
+      },
+      "subjects": [
+        {
+          "kind": "User",
+          "name": "someone",
+          "apiGroup": "rbac.authorization.k8s.io"
+        }
+      ]
+    }
+  ]
+}

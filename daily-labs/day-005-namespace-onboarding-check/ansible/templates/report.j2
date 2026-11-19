@@ -1,0 +1,8 @@
+onboardcheck report: {{ report_name }}
+{% for r in rows %}
+{{ r.text }}
+{% endfor %}
+{% for c in classes %}
+HINT {{ c }}: {{ hints[c] }}
+{% endfor %}
+RESULT {{ result }} crit={{ crit }} warn={{ warn }} namespaces={{ spec['namespaces'] | length }} clean={{ (spec['namespaces'] | length) - (rows | map(attribute='ns') | unique | list | length) }}

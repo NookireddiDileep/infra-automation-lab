@@ -1,0 +1,27 @@
+---
+# The "from one spec" half: render quota + limitrange + RBAC + NetworkPolicy for every namespace in the spec.
+# NOT part of `make test` (needs a cluster and the kubernetes.core collection). Try it with --check first:
+#   ansible-galaxy collection install kubernetes.core
+#   ansible-playbook apply_onboarding.yml -e spec_file=../samples/ocp-dev.spec.json --check --diff
+# Re-running is a no-op (k8s modules are idempotent); then `onboard_check.yml` proves the result.
+# On OpenShift, swap Namespace for a ProjectRequest or use redhat.openshift.k8s the same way.
+- name: Apply the namespace onboarding spec
+  hosts: localhost
+  gather_facts: false
+  vars:
+    spec_file: "{{ playbook_dir }}/../samples/ocp-dev.spec.json"
+    tiers:   # requests.cpu, requests.memory, pods, default limit cpu, default limit memory
+      small: {cpu: "4", memory: 8Gi, pods: "20", lcpu: 500m, lmem: 512Mi}
+      medium: {cpu: "16", memory: 32Gi, pods: "60", lcpu: "1", lmem: 1Gi}
+      large: {cpu: "64", memory: 128Gi, pods: "200", lcpu: "2", lmem: 2Gi}
+  tasks:
+    - name: Load the spec
+      ansible.builtin.set_fact:
+        spec: "{{ lookup('ansible.builtin.file', spec_file) | from_json }}"
+
+    - name: Onboard each namespace
+      ansible.builtin.include_tasks: tasks/apply_one.yml
+      loop: "{{ spec['namespaces'] }}"
+      loop_control:
+        loop_var: onboard
+        label: "{{ onboard['name'] }}"

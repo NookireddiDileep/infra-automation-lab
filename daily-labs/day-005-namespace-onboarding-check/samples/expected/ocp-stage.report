@@ -1,0 +1,7 @@
+onboardcheck report: ocp-stage
+WARN batch MISSING NetworkPolicy/allow-from-openshift-ingress
+WARN search DRIFT ResourceQuota/onboarding-quota pods want=60 have=75
+WARN search DRIFT LimitRange/onboarding-limits default.memory want=1Gi have=2Gi
+HINT DRIFT: re-apply the spec (ansible-playbook apply_onboarding.yml), then re-run this check
+HINT MISSING: onboarding never ran or was reverted: apply the spec (ansible-playbook apply_onboarding.yml)
+RESULT WARN crit=0 warn=3 namespaces=2 clean=0

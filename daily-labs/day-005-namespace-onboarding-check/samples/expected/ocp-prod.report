@@ -1,0 +1,13 @@
+onboardcheck report: ocp-prod
+CRIT checkout MISSING Namespace/checkout
+CRIT ledger EXTRA RoleBinding/temp-debug cluster-admin to User:ops-contractor-01,Group:ledger-debuggers
+CRIT ledger DRIFT NetworkPolicy/default-deny-ingress not deny-all
+CRIT ml-platform DRIFT ResourceQuota/onboarding-quota requests.cpu want=64 have=-
+CRIT reports DRIFT RoleBinding/onboarding-admin subjects want=Group:reports-admins have=Group:platform-all-staff
+WARN ml-platform DRIFT ResourceQuota/onboarding-quota requests.memory want=128Gi have=256Gi
+WARN ml-platform MISSING LimitRange/onboarding-limits
+WARN reports MISSING NetworkPolicy/allow-from-openshift-ingress
+HINT DRIFT: re-apply the spec (ansible-playbook apply_onboarding.yml), then re-run this check
+HINT EXTRA: oc get rolebindings -A | grep -i admin; remove it or record the exception
+HINT MISSING: onboarding never ran or was reverted: apply the spec (ansible-playbook apply_onboarding.yml)
+RESULT CRIT crit=5 warn=3 namespaces=6 clean=2

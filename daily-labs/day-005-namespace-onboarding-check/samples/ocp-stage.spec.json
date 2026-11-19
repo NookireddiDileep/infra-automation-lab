@@ -1,0 +1,16 @@
+{
+  "namespaces": [
+    {
+      "name": "search",
+      "tier": "medium",
+      "admin_group": "search-admins",
+      "viewer_group": "search-viewers"
+    },
+    {
+      "name": "batch",
+      "tier": "small",
+      "admin_group": "batch-admins",
+      "viewer_group": "batch-viewers"
+    }
+  ]
+}

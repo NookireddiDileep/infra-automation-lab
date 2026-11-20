@@ -1,0 +1,35 @@
+---
+# in:  cert_file, cs_now, warn_days, crit_days (+ tab, nl from the play)
+# out: cs_report (byte-exact report text), cs_result (OK|WARN|CRIT), cs_host
+- name: Validate thresholds and timestamp
+  ansible.builtin.assert:
+    that:
+      - warn_days | int > crit_days | int
+      - crit_days | int >= 0
+      - cs_now is match(iso_re)
+    quiet: true
+    fail_msg: "certscan: invalid thresholds or --now (crit must be lower than warn)"
+
+- name: Evaluate {{ cert_file | basename }}
+  ansible.builtin.set_fact:
+    cs_eval: "{{ lookup('ansible.builtin.template', playbook_dir ~ '/templates/evaluate.j2') | from_json }}"
+  vars:
+    text: "{{ lookup('ansible.builtin.file', cert_file) }}"
+
+- name: Refuse a bad inventory
+  ansible.builtin.fail:
+    msg: "certscan: {{ cs_eval.error }} in {{ cert_file }}"
+  when: cs_eval.error != ''
+
+- name: Build the report
+  ansible.builtin.set_fact:
+    cs_host: "{{ cs_eval.host }}"
+    cs_result: "{{ 'CRIT' if crit_n | int > 0 else 'WARN' if warn_n | int > 0 else 'OK' }}"
+    cs_report: >-
+      {{ 'certscan report: ' ~ cs_eval.host ~ nl
+      ~ (cs_eval.lines | sort(case_sensitive=true) | map('regex_replace', '$', nl) | join)
+      ~ 'RESULT ' ~ ('CRIT' if crit_n | int > 0 else 'WARN' if warn_n | int > 0 else 'OK')
+      ~ ' crit=' ~ crit_n ~ ' warn=' ~ warn_n ~ ' ok=' ~ cs_eval.ok ~ nl }}
+  vars:
+    crit_n: "{{ cs_eval.lines | select('match', '^CRIT') | list | length }}"
+    warn_n: "{{ cs_eval.lines | select('match', '^WARN') | list | length }}"

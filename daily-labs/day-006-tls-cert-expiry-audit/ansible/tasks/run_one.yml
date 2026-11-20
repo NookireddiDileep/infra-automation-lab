@@ -1,0 +1,13 @@
+---
+- name: Audit {{ cert_file | basename }}
+  ansible.builtin.include_tasks: check.yml
+
+- name: Write the report (idempotent - unchanged content reports ok, not changed)
+  ansible.builtin.copy:
+    content: "{{ cs_report }}"
+    dest: "{{ out_dir }}/{{ cs_host }}.report"
+    mode: "0644"
+
+- name: Remember the result
+  ansible.builtin.set_fact:
+    cs_results: "{{ cs_results | default([]) + [{'host': cs_host, 'result': cs_result}] }}"

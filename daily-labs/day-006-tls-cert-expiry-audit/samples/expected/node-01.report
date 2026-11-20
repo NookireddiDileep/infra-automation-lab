@@ -1,0 +1,7 @@
+certscan report: node-01
+CRIT endpoint:node-01.example.com:443 expires in 9d (2026-11-29) CN=node-01.example.com
+CRIT file:/etc/pki/ca-trust/source/anchors/legacy-ca.pem expired 10d ago (2026-11-10) CN=Legacy Internal CA,O=Example Corp
+CRIT file:/etc/pki/tls/certs/registry.pem expires in 14d (2026-12-04) CN=registry.example.com
+WARN file:/etc/pki/tls/certs/ingress.pem expires in 30d (2026-12-20) CN=*.apps.example.com
+WARN reload-needed CN=node-01.example.com endpoint serves 2026-11-29 but file has 2027-02-10
+RESULT CRIT crit=3 warn=2 ok=2

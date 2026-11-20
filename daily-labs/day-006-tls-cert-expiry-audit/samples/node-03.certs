@@ -1,0 +1,5 @@
+# certscan inventory v1
+# host=node-03
+file:/etc/pki/tls/certs/node-03.pem	2026-12-05T10:30:00Z	CN=node-03.example.com
+endpoint:node-03.example.com:8443	2027-03-01T00:00:00Z	CN=node-03.example.com
+file:/etc/pki/tls/certs/kubelet-client.pem	2027-11-01T00:00:00Z	CN=system:node:node-03.example.com

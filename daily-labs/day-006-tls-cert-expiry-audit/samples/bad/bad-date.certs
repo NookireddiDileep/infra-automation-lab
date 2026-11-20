@@ -1,0 +1,3 @@
+# certscan inventory v1
+# host=node-09
+file:/etc/pki/tls/certs/x.pem	2026-13-45T00:00:00Z	CN=x.example.com

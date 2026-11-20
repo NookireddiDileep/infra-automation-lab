@@ -1,0 +1,2 @@
+# certscan inventory v1
+file:/etc/pki/tls/certs/x.pem	2026-12-01T00:00:00Z	CN=x.example.com

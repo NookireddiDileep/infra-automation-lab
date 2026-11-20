@@ -1,0 +1,6 @@
+# certscan inventory v1
+# host=node-02
+
+file:/etc/pki/tls/certs/node-02.pem	2027-01-15T09:30:00Z	CN=node-02.example.com
+endpoint:node-02.example.com:443	2027-01-15T09:30:00Z	CN=node-02.example.com
+file:/etc/pki/tls/certs/etcd-peer.pem	2026-12-21T00:00:00Z	CN=etcd-peer.example.com

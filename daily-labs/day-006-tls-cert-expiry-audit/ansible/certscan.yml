@@ -1,0 +1,42 @@
+---
+# Audit every *.certs inventory in cert_dir and write <host>.report to out_dir.
+#   ansible-playbook certscan.yml -e cert_dir=/var/lib/certscan -e fail_on_crit=true
+# Inventories come from `bash/certscan.sh collect` (or an ansible.builtin.command task on each host).
+- name: TLS certificate expiry audit
+  hosts: localhost
+  gather_facts: false
+  vars:
+    cert_dir: "{{ playbook_dir }}/../samples"
+    out_dir: "{{ playbook_dir }}/reports"
+    warn_days: 30
+    crit_days: 14
+    fail_on_crit: true
+    # pin with -e cs_now=... for reproducible runs; default is the current UTC time
+    cs_now: "{{ lookup('ansible.builtin.pipe', 'date -u +%Y-%m-%dT%H:%M:%SZ') }}"
+    tab: "\t"
+    nl: "\n"
+    iso_re: '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$'
+  tasks:
+    - name: Create the report directory
+      ansible.builtin.file:
+        path: "{{ out_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Audit each inventory
+      ansible.builtin.include_tasks: tasks/run_one.yml
+      loop: "{{ lookup('ansible.builtin.fileglob', cert_dir ~ '/*.certs', wantlist=True) | sort }}"
+      loop_control:
+        loop_var: cert_file
+        label: "{{ cert_file | basename }}"
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg: "{{ cs_results | map(attribute='host') | zip(cs_results | map(attribute='result')) | map('join', ': ') | list }}"
+
+    - name: Fail the run when any host is CRIT (gate a pipeline on it)
+      ansible.builtin.assert:
+        that: cs_results | selectattr('result', 'equalto', 'CRIT') | list | length == 0
+        fail_msg: "CRIT certificates on: {{ cs_results | selectattr('result', 'equalto', 'CRIT') | map(attribute='host') | join(', ') }}"
+        quiet: true
+      when: fail_on_crit | bool

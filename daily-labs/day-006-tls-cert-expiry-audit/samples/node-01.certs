@@ -1,0 +1,8 @@
+# certscan inventory v1
+# host=node-01
+file:/etc/pki/ca-trust/source/anchors/legacy-ca.pem	2026-11-10T08:00:00Z	CN=Legacy Internal CA,O=Example Corp
+file:/etc/pki/ca-trust/source/anchors/corp-root.pem	2031-06-30T00:00:00Z	CN=Example Root CA
+file:/etc/pki/tls/certs/node-01.pem	2027-02-10T10:00:00Z	CN=node-01.example.com
+endpoint:node-01.example.com:443	2026-11-29T12:00:00Z	CN=node-01.example.com
+file:/etc/pki/tls/certs/ingress.pem	2026-12-20T00:00:00Z	CN=*.apps.example.com
+file:/etc/pki/tls/certs/registry.pem	2026-12-04T00:00:00Z	CN=registry.example.com

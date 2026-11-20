@@ -48,3 +48,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   When the quota tracks `requests.*` or `limits.*`, the API rejects pods that don't set those values. A LimitRange with default requests/limits fills them in, so the two objects always go together.
 - **A default-deny NetworkPolicy is applied but pods still receive traffic. What do you check?** (Daily 005)  
   Whether the CNI enforces NetworkPolicy at all (kind's default does not), whether `podSelector` matches the pods, and whether someone added an ingress rule: `ingress: [{}]` means allow everything. Policies are additive allow-lists, so one permissive policy overrides the deny-all.
+- **The certificate file on disk is valid but users see an expired certificate. Why?** (Daily 006)  
+  The service is still serving the old certificate from memory: the renewal replaced the file but nothing reloaded the process. Compare `openssl x509 -enddate` on the file with `openssl s_client -connect host:443 -servername host </dev/null | openssl x509 -noout -enddate`, reload, and make the renewal hook reload the service. Audit both file and endpoint.
+- **How do you build an expiry check that doesn't produce false alarms or silent gaps?** (Daily 006)  
+  Separate collection from evaluation: a collector emits `source, notAfter, subject`, and a pure function applies thresholds (warn 30d, crit 14d) with floored day counts. A failed handshake is an error, not a skipped row, and the clock is injectable so tests are deterministic.
+- **Why pass `-servername` to `openssl s_client`?** (Daily 006)  
+  SNI. Without it a shared host or ingress returns its default certificate, so you audit the wrong one.

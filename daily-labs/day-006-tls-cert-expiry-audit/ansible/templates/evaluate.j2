@@ -1,0 +1,41 @@
+{# Inputs: text (inventory v1), cs_now (ISO), warn_days, crit_days, tab, iso_re. Output: one JSON document. #}
+{% set fmt = '%Y-%m-%dT%H:%M:%SZ' %}
+{% set ns = namespace(host='', recs=[], err='', lines=[], ok=0) %}
+{% for raw in text.splitlines() %}
+{% if raw.startswith('# host=') %}
+{% set ns.host = raw[7:] %}
+{% elif raw == '' or raw.startswith('#') %}
+{% else %}
+{% set f = raw.split(tab) %}
+{% if f | length != 3 or f[0] is not match('^(file|endpoint):.') or f[2] == '' or f[1] is not match(iso_re) %}
+{% set ns.err = ns.err or ('invalid line ' ~ loop.index) %}
+{% else %}
+{% set ns.recs = ns.recs + [{'src': f[0], 'na': f[1], 'subj': f[2]}] %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if ns.err == '' and ns.host == '' %}{% set ns.err = "missing '# host=' header" %}{% endif %}
+{% if ns.err == '' and ns.recs | length == 0 %}{% set ns.err = 'no certificates' %}{% endif %}
+{% if ns.err == '' %}
+{% for r in ns.recs %}
+{% set secs = ((r.na | to_datetime(fmt)) - (cs_now | to_datetime(fmt))).total_seconds() | int %}
+{% set d = secs // 86400 %}
+{% set tail = ' (' ~ r.na[:10] ~ ') ' ~ r.subj %}
+{% if d < 0 %}
+{% set ns.lines = ns.lines + ['CRIT ' ~ r.src ~ ' expired ' ~ (-d) ~ 'd ago' ~ tail] %}
+{% elif d <= crit_days | int %}
+{% set ns.lines = ns.lines + ['CRIT ' ~ r.src ~ ' expires in ' ~ d ~ 'd' ~ tail] %}
+{% elif d <= warn_days | int %}
+{% set ns.lines = ns.lines + ['WARN ' ~ r.src ~ ' expires in ' ~ d ~ 'd' ~ tail] %}
+{% else %}
+{% set ns.ok = ns.ok + 1 %}
+{% endif %}
+{% endfor %}
+{# renewed on disk but the running service still serves the old certificate #}
+{% for e in ns.recs if e.src.startswith('endpoint:') %}
+{% for f in ns.recs if f.src.startswith('file:') and f.subj == e.subj and e.na < f.na %}
+{% set ns.lines = ns.lines + ['WARN reload-needed ' ~ e.subj ~ ' endpoint serves ' ~ e.na[:10] ~ ' but file has ' ~ f.na[:10]] %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{{ {'error': ns.err, 'host': ns.host, 'lines': ns.lines, 'ok': ns.ok} | to_json }}

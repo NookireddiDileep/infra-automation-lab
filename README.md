@@ -63,6 +63,7 @@ templates/     session-note.md · project-readme.md
 | Daily 003 | Pod triage: CrashLoop vs OOMKilled vs ImagePull (Bash/Ansible/Python/Go) | `daily-labs/day-003-pod-triage/` | [README](daily-labs/day-003-pod-triage/README.md) |
 | Daily 004 | Pending pod root-cause classifier: capacity vs taint vs selector vs PVC (Bash/Ansible/Python/Go) | `daily-labs/day-004-pending-pod-classifier/` | [README](daily-labs/day-004-pending-pod-classifier/README.md) |
 | Daily 005 | Namespace onboarding check: quota, limits, RBAC, NetworkPolicy vs one spec (Bash/Ansible/Python/Go) | `daily-labs/day-005-namespace-onboarding-check/` | [README](daily-labs/day-005-namespace-onboarding-check/README.md) |
+| Daily 006 | TLS certificate expiry audit: expired, expiring, renewed-but-not-reloaded (Bash/Ansible/Python/Go) | `daily-labs/day-006-tls-cert-expiry-audit/` | [README](daily-labs/day-006-tls-cert-expiry-audit/README.md) |
 | Bash W1 Wed | for / while / while read | `01-bash/week01-foundations/ping_check.sh` | [wed-loops.md](01-bash/week01-foundations/wed-loops.md) |
 
 ---

@@ -1,0 +1,13 @@
+---
+- name: "{{ bad_file | basename }}: must fail"
+  block:
+    - ansible.builtin.include_tasks: check.yml
+      vars:
+        cert_file: "{{ bad_file }}"
+    - ansible.builtin.fail:
+        msg: "{{ bad_file }} was accepted"
+  rescue:
+    - ansible.builtin.assert:
+        that: "'certscan:' in ansible_failed_result.msg and 'was accepted' not in ansible_failed_result.msg"
+        quiet: true
+        success_msg: "ok: {{ bad_file | basename }} refused"

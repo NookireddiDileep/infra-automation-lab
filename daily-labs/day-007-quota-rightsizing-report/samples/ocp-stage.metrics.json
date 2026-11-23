@@ -1,0 +1,252 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": ""
+  },
+  "items": [
+    {
+      "apiVersion": "metrics.k8s.io/v1beta1",
+      "kind": "PodMetrics",
+      "metadata": {
+        "name": "app-web-0",
+        "namespace": "web",
+        "creationTimestamp": "2026-11-23T04:00:00Z"
+      },
+      "timestamp": "2026-11-23T04:00:00Z",
+      "window": "15s",
+      "containers": [
+        {
+          "name": "c0",
+          "usage": {
+            "cpu": "500000000n",
+            "memory": "2097152Ki"
+          }
+        },
+        {
+          "name": "c1",
+          "usage": {
+            "cpu": "500000000n",
+            "memory": "2097152Ki"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "metrics.k8s.io/v1beta1",
+      "kind": "PodMetrics",
+      "metadata": {
+        "name": "app-web-1",
+        "namespace": "web",
+        "creationTimestamp": "2026-11-23T04:00:00Z"
+      },
+      "timestamp": "2026-11-23T04:00:00Z",
+      "window": "15s",
+      "containers": [
+        {
+          "name": "c0",
+          "usage": {
+            "cpu": "500000000n",
+            "memory": "2097152Ki"
+          }
+        },
+        {
+          "name": "c1",
+          "usage": {
+            "cpu": "500000000n",
+            "memory": "2097152Ki"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "metrics.k8s.io/v1beta1",
+      "kind": "PodMetrics",
+      "metadata": {
+        "name": "app-web-2",
+        "namespace": "web",
+        "creationTimestamp": "2026-11-23T04:00:00Z"
+      },
+      "timestamp": "2026-11-23T04:00:00Z",
+      "window": "15s",
+      "containers": [
+        {
+          "name": "c0",
+          "usage": {
+            "cpu": "500000000n",
+            "memory": "2097152Ki"
+          }
+        },
+        {
+          "name": "c1",
+          "usage": {
+            "cpu": "500000000n",
+            "memory": "2097152Ki"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "metrics.k8s.io/v1beta1",
+      "kind": "PodMetrics",
+      "metadata": {
+        "name": "app-data-0",
+        "namespace": "data",
+        "creationTimestamp": "2026-11-23T04:00:00Z"
+      },
+      "timestamp": "2026-11-23T04:00:00Z",
+      "window": "15s",
+      "containers": [
+        {
+          "name": "c0",
+          "usage": {
+            "cpu": "166666666n",
+            "memory": "1536000Ki"
+          }
+        },
+        {
+          "name": "c1",
+          "usage": {
+            "cpu": "166666666n",
+            "memory": "1536000Ki"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "metrics.k8s.io/v1beta1",
+      "kind": "PodMetrics",
+      "metadata": {
+        "name": "app-data-1",
+        "namespace": "data",
+        "creationTimestamp": "2026-11-23T04:00:00Z"
+      },
+      "timestamp": "2026-11-23T04:00:00Z",
+      "window": "15s",
+      "containers": [
+        {
+          "name": "c0",
+          "usage": {
+            "cpu": "166666666n",
+            "memory": "1536000Ki"
+          }
+        },
+        {
+          "name": "c1",
+          "usage": {
+            "cpu": "166666666n",
+            "memory": "1536000Ki"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "metrics.k8s.io/v1beta1",
+      "kind": "PodMetrics",
+      "metadata": {
+        "name": "app-data-2",
+        "namespace": "data",
+        "creationTimestamp": "2026-11-23T04:00:00Z"
+      },
+      "timestamp": "2026-11-23T04:00:00Z",
+      "window": "15s",
+      "containers": [
+        {
+          "name": "c0",
+          "usage": {
+            "cpu": "166666666n",
+            "memory": "1536000Ki"
+          }
+        },
+        {
+          "name": "c1",
+          "usage": {
+            "cpu": "166666670n",
+            "memory": "1536000Ki"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "metrics.k8s.io/v1beta1",
+      "kind": "PodMetrics",
+      "metadata": {
+        "name": "app-tools-0",
+        "namespace": "tools",
+        "creationTimestamp": "2026-11-23T04:00:00Z"
+      },
+      "timestamp": "2026-11-23T04:00:00Z",
+      "window": "15s",
+      "containers": [
+        {
+          "name": "c0",
+          "usage": {
+            "cpu": "250000000n",
+            "memory": "699050Ki"
+          }
+        },
+        {
+          "name": "c1",
+          "usage": {
+            "cpu": "250000000n",
+            "memory": "699050Ki"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "metrics.k8s.io/v1beta1",
+      "kind": "PodMetrics",
+      "metadata": {
+        "name": "app-tools-1",
+        "namespace": "tools",
+        "creationTimestamp": "2026-11-23T04:00:00Z"
+      },
+      "timestamp": "2026-11-23T04:00:00Z",
+      "window": "15s",
+      "containers": [
+        {
+          "name": "c0",
+          "usage": {
+            "cpu": "250000000n",
+            "memory": "699050Ki"
+          }
+        },
+        {
+          "name": "c1",
+          "usage": {
+            "cpu": "250000000n",
+            "memory": "699050Ki"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "metrics.k8s.io/v1beta1",
+      "kind": "PodMetrics",
+      "metadata": {
+        "name": "app-tools-2",
+        "namespace": "tools",
+        "creationTimestamp": "2026-11-23T04:00:00Z"
+      },
+      "timestamp": "2026-11-23T04:00:00Z",
+      "window": "15s",
+      "containers": [
+        {
+          "name": "c0",
+          "usage": {
+            "cpu": "250000000n",
+            "memory": "699050Ki"
+          }
+        },
+        {
+          "name": "c1",
+          "usage": {
+            "cpu": "250000000n",
+            "memory": "699054Ki"
+          }
+        }
+      ]
+    }
+  ]
+}

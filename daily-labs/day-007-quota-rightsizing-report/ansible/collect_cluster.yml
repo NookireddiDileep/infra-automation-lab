@@ -1,0 +1,33 @@
+---
+# NOT part of `make test`: needs a cluster and the kubernetes.core collection (ansible-galaxy collection install kubernetes.core).
+# Saves live quota status and pod metrics in the shape rightsize.yml / rightsize.sh expect.
+#   ansible-playbook collect_cluster.yml -e out_dir=/tmp -e name=mycluster
+- name: Snapshot ResourceQuota status and PodMetrics from the current kubeconfig context
+  hosts: localhost
+  gather_facts: false
+  vars:
+    out_dir: /tmp
+    name: mycluster
+  tasks:
+    - name: Read every ResourceQuota (read-only)
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: ResourceQuota
+      register: quotas
+
+    - name: Read PodMetrics (needs metrics-server / OpenShift monitoring)
+      kubernetes.core.k8s_info:
+        api_version: metrics.k8s.io/v1beta1
+        kind: PodMetrics
+      register: metrics
+
+    - name: Save both as kind List documents
+      ansible.builtin.copy:
+        content: "{{ {'apiVersion': 'v1', 'kind': 'List', 'items': item.items} | to_nice_json }}"
+        dest: "{{ out_dir }}/{{ name }}.{{ item.suffix }}.json"
+        mode: "0644"
+      loop:
+        - {suffix: quota, items: "{{ quotas.resources }}"}
+        - {suffix: metrics, items: "{{ metrics.resources }}"}
+      loop_control:
+        label: "{{ item.suffix }}"

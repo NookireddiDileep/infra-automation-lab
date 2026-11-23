@@ -1,0 +1,58 @@
+---
+# In:  quota_file, metrics_file (paths)
+# Out: check_report (text, byte-identical to the Bash/Python/Go report), check_result (OK|WARN|CRIT)
+- name: Load the saved quota list and the saved PodMetrics list
+  ansible.builtin.set_fact:
+    quota_doc: "{{ lookup('ansible.builtin.file', quota_file) | from_json }}"
+    metrics_doc: "{{ lookup('ansible.builtin.file', metrics_file) | from_json }}"
+
+- name: Refuse anything that is not a List (quota)
+  ansible.builtin.assert:
+    that:
+      - quota_doc is mapping
+      - quota_doc['kind'] | default('') == 'List'
+      - quota_doc['items'] is defined and quota_doc['items'] is sequence and quota_doc['items'] is not string
+    fail_msg: "quota: not a List (expected kind List with items[]): {{ quota_file }}"
+    quiet: true
+
+- name: Refuse anything that is not a List (metrics)
+  ansible.builtin.assert:
+    that:
+      - metrics_doc is mapping
+      - metrics_doc['kind'] | default('') == 'List'
+      - metrics_doc['items'] is defined and metrics_doc['items'] is sequence and metrics_doc['items'] is not string
+    fail_msg: "metrics: not a List (expected kind List with items[]): {{ metrics_file }}"
+    quiet: true
+
+- name: Judge every quota (findings in emission order), then sort by severity, namespace, emission index
+  ansible.builtin.set_fact:
+    check_data: "{{ lookup('ansible.builtin.template', 'findings.j2') | from_json }}"
+
+- name: Refuse bad input instead of printing a half report
+  ansible.builtin.assert:
+    that: check_data['errors'] | length == 0
+    fail_msg: "{{ check_data['errors'] | first | default('') }}"
+    quiet: true
+
+- name: Render the report
+  ansible.builtin.set_fact:
+    check_result: "{{ result }}"
+    check_report: "{{ (lookup('ansible.builtin.template', 'report.j2') | trim) ~ nl }}"
+  vars:
+    nl: "\n"
+    rows: "{{ check_data['rows'] | sort(attribute='rank,ns,idx', case_sensitive=true) }}"
+    quotas: "{{ check_data['quotas'] }}"
+    report_name: "{{ quota_file | basename | regex_replace('(\\.quota)?\\.json$', '') }}"
+    classes: "{{ ['FULL', 'NEAR', 'OVERQUOTA', 'OVERREQUEST', 'UNDERREQUEST', 'NOMETRICS', 'INVALID'] | select('in', rows | map(attribute='cls') | list) | list }}"
+    crit: "{{ rows | selectattr('rank', 'equalto', 0) | list | length }}"
+    warn: "{{ rows | selectattr('rank', 'equalto', 1) | list | length }}"
+    flagged: "{{ rows | map(attribute='q') | unique | list | length }}"
+    result: "{{ 'CRIT' if crit | int > 0 else ('WARN' if warn | int > 0 else 'OK') }}"
+    hints:
+      FULL: "new pods are rejected (exceeded quota); find oversized requests first, then raise hard"
+      NEAR: "under 15% headroom: a rollout surge can be rejected; plan the bump before the deploy"
+      OVERQUOTA: "hard is 4x or more the use: shrink it and give the capacity back to the cluster"
+      OVERREQUEST: "requests far above actual use: lower requests (VPA recommend, oc adm top) to free schedulable capacity"
+      UNDERREQUEST: "pods use more than they request: raise requests or they are throttled or evicted first under node pressure"
+      NOMETRICS: "no PodMetrics for this namespace: check metrics-server before trusting right-sizing"
+      INVALID: "quota value is not a valid quantity (or hard is 0): fix the object, the check cannot reason about it"

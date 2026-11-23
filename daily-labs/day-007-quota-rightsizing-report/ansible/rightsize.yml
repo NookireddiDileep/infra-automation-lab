@@ -1,0 +1,36 @@
+---
+# Judge saved ResourceQuota status against saved PodMetrics and write the report. Idempotent: same input, same file, changed=0 on re-run.
+#   ansible-playbook rightsize.yml -e quota_file=../samples/ocp-prod.quota.json -e metrics_file=../samples/ocp-prod.metrics.json
+#   ansible-playbook rightsize.yml ... -e fail_on_crit=true     # gate a pipeline
+- name: ResourceQuota right-sizing (offline, against saved oc JSON)
+  hosts: localhost
+  gather_facts: false
+  vars:
+    quota_file: "{{ playbook_dir }}/../samples/ocp-prod.quota.json"
+    metrics_file: "{{ playbook_dir }}/../samples/ocp-prod.metrics.json"
+    fail_on_crit: false
+    out_dir: "{{ playbook_dir }}/reports"
+  tasks:
+    - name: Run the check
+      ansible.builtin.include_tasks: tasks/check.yml
+
+    - name: Make sure the output directory exists
+      ansible.builtin.file:
+        path: "{{ out_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Write the report
+      ansible.builtin.copy:
+        content: "{{ check_report }}"
+        dest: "{{ out_dir }}/{{ quota_file | basename | regex_replace('(\\.quota)?\\.json$', '') }}.report"
+        mode: "0644"
+
+    - name: Show the verdict
+      ansible.builtin.debug:
+        msg: "{{ check_report.split('\n')[-2] }}"
+
+    - name: Gate on CRIT when asked (the playbook equivalent of exit code 2)
+      ansible.builtin.fail:
+        msg: "{{ check_report.split('\n')[-2] }}"
+      when: fail_on_crit | bool and check_result == 'CRIT'

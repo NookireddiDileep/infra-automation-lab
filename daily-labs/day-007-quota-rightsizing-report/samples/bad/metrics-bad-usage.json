@@ -1,0 +1,1 @@
+{"kind":"List","items":[{"kind":"PodMetrics","metadata":{"namespace":"a"},"containers":[{"usage":{"cpu":"1.5","memory":"1Mi"}}]}]}

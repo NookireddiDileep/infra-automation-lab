@@ -1,0 +1,117 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": ""
+  },
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "team-quota",
+        "namespace": "sandbox",
+        "resourceVersion": "100000",
+        "uid": "00000000-0000-0000-0000-000000000000"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "10",
+          "requests.memory": "20Gi",
+          "pods": "50"
+        }
+      },
+      "status": {
+        "hard": {
+          "requests.cpu": "10",
+          "requests.memory": "20Gi",
+          "pods": "50"
+        },
+        "used": {
+          "requests.cpu": "8400m",
+          "requests.memory": "16Gi",
+          "pods": "42"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "team-quota",
+        "namespace": "ci",
+        "resourceVersion": "100000",
+        "uid": "00000000-0000-0000-0000-000000000000"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "16",
+          "requests.memory": "16Gi",
+          "pods": "20"
+        }
+      },
+      "status": {
+        "hard": {
+          "requests.cpu": "16",
+          "requests.memory": "16Gi",
+          "pods": "20"
+        },
+        "used": {
+          "requests.cpu": "5",
+          "requests.memory": "5Gi",
+          "pods": "1"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "team-quota",
+        "namespace": "demo",
+        "resourceVersion": "100000",
+        "uid": "00000000-0000-0000-0000-000000000000"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "4",
+          "requests.memory": "8Gi",
+          "pods": "20"
+        }
+      },
+      "status": {
+        "hard": {
+          "requests.cpu": "4",
+          "requests.memory": "8Gi",
+          "pods": "20"
+        },
+        "used": {
+          "requests.cpu": "2",
+          "requests.memory": "4Gi",
+          "pods": "6"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "no-status",
+        "namespace": "sandbox"
+      },
+      "spec": {
+        "hard": {
+          "pods": "5"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "settings",
+        "namespace": "sandbox"
+      }
+    }
+  ]
+}

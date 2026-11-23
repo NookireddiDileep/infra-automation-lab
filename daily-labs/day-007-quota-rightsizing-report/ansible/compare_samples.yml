@@ -1,0 +1,38 @@
+---
+# Self-test: the Ansible report must be byte-identical to the golden files that Bash, Python and Go also match.
+- name: Compare against samples/expected
+  hosts: localhost
+  gather_facts: false
+  vars:
+    cases:
+      ocp-prod: CRIT
+      ocp-stage: WARN
+      ocp-dev: OK
+  tasks:
+    - name: Check and compare each sample
+      ansible.builtin.include_tasks: tasks/check_sample.yml
+      vars:
+        quota_file: "{{ playbook_dir }}/../samples/{{ case.key }}.quota.json"
+        metrics_file: "{{ playbook_dir }}/../samples/{{ case.key }}.metrics.json"
+        nl: "\n"
+        # the file lookup strips the trailing newline; put it back so the comparison is byte-exact
+        golden: "{{ lookup('ansible.builtin.file', playbook_dir ~ '/../samples/expected/' ~ case.key ~ '.report') ~ nl }}"
+        want_result: "{{ case.value }}"
+      loop: "{{ cases | dict2items }}"
+      loop_control:
+        loop_var: case
+        label: "{{ case.key }}"
+
+    - name: Bad input must be refused with a clear message, never a half report
+      ansible.builtin.include_tasks: tasks/refuse.yml
+      vars:
+        quota_file: "{{ playbook_dir }}/../samples/{{ case.quota }}"
+        metrics_file: "{{ playbook_dir }}/../samples/{{ case.metrics }}"
+        want_msg: "{{ case.msg }}"
+      loop:
+        - {quota: ocp-dev.quota.json, metrics: bad/metrics-bad-usage.json, msg: "bad container usage in a"}
+        - {quota: bad/not-a-list.json, metrics: ocp-dev.metrics.json, msg: "quota: not a List"}
+        - {quota: ocp-dev.quota.json, metrics: bad/not-a-list.json, msg: "metrics: not a List"}
+      loop_control:
+        loop_var: case
+        label: "{{ case.msg }}"

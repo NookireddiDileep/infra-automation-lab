@@ -1,0 +1,11 @@
+---
+- name: Run the check
+  ansible.builtin.include_tasks: check.yml
+
+- name: Report must equal the golden file and the verdict must match
+  ansible.builtin.assert:
+    that:
+      - check_report == golden
+      - check_result == want_result
+    quiet: true
+    success_msg: "ok {{ quota_file | basename }} -> {{ check_result }}"

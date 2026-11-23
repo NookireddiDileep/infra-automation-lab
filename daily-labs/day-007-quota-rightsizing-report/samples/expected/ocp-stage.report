@@ -1,0 +1,6 @@
+rightsize report: ocp-stage
+WARN data quota/team-quota OVERREQUEST requests.cpu requested=6 actual=1000m eff=16%
+WARN web quota/team-quota NEAR requests.memory used=14Gi hard=16Gi pct=87%
+HINT NEAR: under 15% headroom: a rollout surge can be rejected; plan the bump before the deploy
+HINT OVERREQUEST: requests far above actual use: lower requests (VPA recommend, oc adm top) to free schedulable capacity
+RESULT WARN crit=0 warn=2 quotas=3 healthy=1

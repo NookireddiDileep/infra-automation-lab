@@ -54,3 +54,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   Separate collection from evaluation: a collector emits `source, notAfter, subject`, and a pure function applies thresholds (warn 30d, crit 14d) with floored day counts. A failed handshake is an error, not a skipped row, and the clock is injectable so tests are deterministic.
 - **Why pass `-servername` to `openssl s_client`?** (Daily 006)  
   SNI. Without it a shared host or ingress returns its default certificate, so you audit the wrong one.
+- **Pods are rejected with `exceeded quota` but the nodes are idle. Why, and how do you fix it?** (Daily 007)  
+  Quota and the scheduler both count **requests**, not usage. Compare `oc describe quota` (used vs hard) with `oc adm top pods`: teams usually pad requests. Lower the requests (VPA recommendation, p95 over a week) or raise `hard` deliberately; adding nodes does not unblock a full quota.
+- **Why is a pod using more memory than it requested worse than the same for CPU?** (Daily 007)  
+  CPU is compressible: the pod is throttled. Memory is not: under node pressure a Burstable pod over its request is evicted first, and at its limit it is OOMKilled. So memory under-requesting is CRIT in my report and CPU is WARN.
+- **How do you right-size requests without causing an outage?** (Daily 007)  
+  Measure p95 over at least a week including peaks, set requests near p90, keep limit headroom, roll out gradually and watch CPU throttling and OOMs. Start with VPA in recommendation mode; never auto-lower stateful workloads.

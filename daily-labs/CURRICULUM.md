@@ -51,7 +51,7 @@ Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi
 15. ✅ Pod triage report: CrashLoopBackOff, OOMKilled, ImagePullBackOff with reasons
 16. ✅ Pending pod root-cause classifier (FailedScheduling reason parser; links to AROHAN Lab 03)
 17. ✅ Namespace onboarding: quota + limitrange + RBAC + NetworkPolicy from one spec (conformance check + apply playbook)
-18. ResourceQuota / requests-vs-usage right-sizing report
+18. ✅ ResourceQuota / requests-vs-usage right-sizing report
 19. Node pressure & eviction analysis (memory/disk/PID pressure)
 20. PVC Pending / StorageClass binding-mode diagnosis
 21. OpenShift ClusterOperator & MachineConfigPool health gate (pre-upgrade check)

@@ -1,0 +1,23 @@
+rightsize report: ocp-prod
+CRIT ml-platform quota/gpu-quota UNDERREQUEST requests.memory requested=20Gi actual=26624Mi eff=130%
+CRIT payments quota/team-quota FULL requests.cpu used=16 hard=16 pct=100%
+CRIT reports quota/team-quota FULL pods used=20 hard=20 pct=100%
+WARN audit quota/legacy-quota INVALID requests.cpu hard=1.5 used=1
+WARN audit quota/legacy-quota OVERQUOTA requests.memory used=2Gi hard=8Gi pct=25%
+WARN audit quota/legacy-quota INVALID pods hard=0 used=0
+WARN batch quota/team-quota NOMETRICS requests.cpu used=2 no PodMetrics
+WARN ledger quota/team-quota OVERREQUEST requests.cpu requested=6 actual=420m eff=7%
+WARN ledger quota/team-quota OVERREQUEST requests.memory requested=12Gi actual=1500Mi eff=12%
+WARN ml-platform quota/gpu-quota OVERQUOTA requests.cpu used=10 hard=64 pct=15%
+WARN ml-platform quota/gpu-quota OVERQUOTA requests.memory used=20Gi hard=128Gi pct=15%
+WARN payments quota/team-quota NEAR requests.memory used=28Gi hard=32Gi pct=87%
+WARN reports quota/team-quota NEAR requests.cpu used=3500m hard=4 pct=87%
+WARN reports quota/team-quota UNDERREQUEST requests.cpu requested=3500m actual=4800m eff=137%
+HINT FULL: new pods are rejected (exceeded quota); find oversized requests first, then raise hard
+HINT NEAR: under 15% headroom: a rollout surge can be rejected; plan the bump before the deploy
+HINT OVERQUOTA: hard is 4x or more the use: shrink it and give the capacity back to the cluster
+HINT OVERREQUEST: requests far above actual use: lower requests (VPA recommend, oc adm top) to free schedulable capacity
+HINT UNDERREQUEST: pods use more than they request: raise requests or they are throttled or evicted first under node pressure
+HINT NOMETRICS: no PodMetrics for this namespace: check metrics-server before trusting right-sizing
+HINT INVALID: quota value is not a valid quantity (or hard is 0): fix the object, the check cannot reason about it
+RESULT CRIT crit=3 warn=11 quotas=7 healthy=1

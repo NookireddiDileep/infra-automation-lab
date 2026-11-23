@@ -1,0 +1,104 @@
+{# JSON {rows, quotas, errors}: rows in emission order {rank, ns, q, cls, text, idx}; the caller sorts them. trim_blocks is on, lstrip_blocks is off. #}
+{% set keydefs = [['requests.cpu', 'cpu'], ['requests.memory', 'mem'], ['pods', 'int']] %}
+{% set units = {'': 1, 'Ki': 1024, 'Mi': 1048576, 'Gi': 1073741824, 'Ti': 1099511627776} %}
+{% set cpun = {'n': 1, 'u': 1000, 'm': 1000000, '': 1000000000} %}
+{# cpu -> millicores, mem -> bytes, int -> int; 'x' = not a valid quantity (anything but a string is invalid) #}
+{% macro qty(kind, v) -%}
+{%- if v is not string -%}x
+{%- elif kind == 'cpu' -%}
+{%- if v is match('^[0-9]+m?$') -%}{{ (v[:-1] | int) if v.endswith('m') else ((v | int) * 1000) }}{%- else -%}x{%- endif -%}
+{%- elif kind == 'mem' -%}
+{%- if v is match('^[0-9]+(Ki|Mi|Gi|Ti)?$') -%}{{ (v | regex_search('^[0-9]+') | int) * units[v | regex_replace('^[0-9]+', '')] }}{%- else -%}x{%- endif -%}
+{%- else -%}
+{%- if v is match('^[0-9]+$') -%}{{ v | int }}{%- else -%}x{%- endif -%}
+{%- endif -%}
+{%- endmacro %}
+{% macro add(acc, rank, ns, qn, cls, detail) -%}
+{%- set acc.rows = acc.rows + [{'rank': rank, 'ns': ns, 'q': ns ~ '/' ~ qn, 'cls': cls, 'idx': acc.rows | length, 'text': ('CRIT' if rank == 0 else 'WARN') ~ ' ' ~ ns ~ ' quota/' ~ qn ~ ' ' ~ cls ~ ' ' ~ detail}] -%}
+{%- endmacro %}
+{% set acc = namespace(rows=[], errors=[], nano={}, mem={}, quotas=[]) %}
+{# --- usage per namespace: CPU summed in nanocores, floored to millicores at the end #}
+{% for pm in metrics_doc['items'] | select('mapping') | selectattr('kind', 'defined') | selectattr('kind', 'equalto', 'PodMetrics') %}
+{% set ns = (pm['metadata'] | default({}, true))['namespace'] | default('', true) %}
+{% if ns is not string or ns == '' %}
+{% set acc.errors = acc.errors + ['metrics: PodMetrics without metadata.namespace'] %}
+{% else %}
+{% set acc.nano = acc.nano | combine({ns: acc.nano[ns] | default(0)}) %}
+{% set acc.mem = acc.mem | combine({ns: acc.mem[ns] | default(0)}) %}
+{% for c in (pm['containers'] | default([], true)) %}
+{% set u = (c['usage'] | default({}, true)) if c is mapping else {} %}
+{% set cpu = u['cpu'] | default(none) %}
+{% set mem = u['memory'] | default(none) %}
+{% if cpu is string and cpu is match('^[0-9]+(n|u|m)?$') and mem is string and mem is match('^[0-9]+(Ki|Mi|Gi)?$') %}
+{% set acc.nano = acc.nano | combine({ns: acc.nano[ns] + (cpu | regex_search('^[0-9]+') | int) * cpun[cpu | regex_replace('^[0-9]+', '')]}) %}
+{% set acc.mem = acc.mem | combine({ns: acc.mem[ns] + (mem | regex_search('^[0-9]+') | int) * units[mem | regex_replace('^[0-9]+', '')]}) %}
+{% else %}
+{% set acc.errors = acc.errors + ['metrics: bad container usage in ' ~ ns ~ ': cpu=' ~ (cpu if cpu is string else cpu | to_json) ~ ' memory=' ~ (mem if mem is string else mem | to_json)] %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% set usage = namespace(d={}) %}
+{% for ns, n in acc.nano.items() %}
+{% set usage.d = usage.d | combine({ns: {'cpu': n // 1000000, 'mem': acc.mem[ns]}}) %}
+{% endfor %}
+{# --- index the quotas once, then sort by (namespace, name) in byte order #}
+{% set idx = namespace(l=[]) %}
+{% for it in quota_doc['items'] | select('mapping') | selectattr('kind', 'defined') | selectattr('kind', 'equalto', 'ResourceQuota') %}
+{% set md = it['metadata'] | default({}, true) %}
+{% set ns = md['namespace'] | default('', true) %}
+{% set qn = md['name'] | default('', true) %}
+{% if ns is not string or qn is not string or ns == '' or qn == '' %}
+{% set acc.errors = acc.errors + ['quota: ResourceQuota without metadata.name/namespace'] %}
+{% else %}
+{% set idx.l = idx.l + [{'ns': ns, 'name': qn, 'obj': it}] %}
+{% endif %}
+{% endfor %}
+{% for e in idx.l | sort(attribute='ns,name', case_sensitive=true) %}
+{% set ns = e['ns'] %}
+{% set qn = e['name'] %}
+{% set st = (e['obj']['status'] | default({}, true)) %}
+{% set st = st if st is mapping else {} %}
+{% set hard = st['hard'] | default({}, true) %}
+{% set hard = hard if hard is mapping else {} %}
+{% set used = st['used'] | default({}, true) %}
+{% set used = used if used is mapping else {} %}
+{% for kd in keydefs if kd[0] in hard and kd[0] in used %}
+{% set k = kd[0] %}
+{% set kind = kd[1] %}
+{% set h = qty(kind, hard[k]) | trim %}
+{% set u = qty(kind, used[k]) | trim %}
+{% set hr = hard[k] if hard[k] is string else hard[k] | to_json %}
+{% set ur = used[k] if used[k] is string else used[k] | to_json %}
+{% if h == 'x' or u == 'x' or (h | int) == 0 %}
+{% set _ = add(acc, 1, ns, qn, 'INVALID', k ~ ' hard=' ~ hr ~ ' used=' ~ ur) %}
+{% else %}
+{% set h = h | int %}
+{% set u = u | int %}
+{% set pct = (u * 100) // h %}
+{% set detail = k ~ ' used=' ~ ur ~ ' hard=' ~ hr ~ ' pct=' ~ pct ~ '%' %}
+{% if pct >= 100 %}
+{% set _ = add(acc, 0, ns, qn, 'FULL', detail) %}
+{% elif pct >= 85 %}
+{% set _ = add(acc, 1, ns, qn, 'NEAR', detail) %}
+{% elif kind != 'int' and u * 4 <= h %}
+{% set _ = add(acc, 1, ns, qn, 'OVERQUOTA', detail) %}
+{% endif %}
+{% if kind != 'int' and ns in usage.d and u > 0 %}
+{% set a = usage.d[ns]['cpu'] if kind == 'cpu' else usage.d[ns]['mem'] %}
+{% set shown = (a ~ 'm') if kind == 'cpu' else ((a // 1048576) ~ 'Mi') %}
+{% set e2 = k ~ ' requested=' ~ ur ~ ' actual=' ~ shown ~ ' eff=' ~ ((a * 100) // u) ~ '%' %}
+{% if a * 100 < u * 30 %}
+{% set _ = add(acc, 1, ns, qn, 'OVERREQUEST', e2) %}
+{% elif a * 100 > u * 120 %}
+{% set _ = add(acc, 0 if kind == 'mem' else 1, ns, qn, 'UNDERREQUEST', e2) %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% set c = qty('cpu', used['requests.cpu'] | default(none)) | trim %}
+{% if c != 'x' and (c | int) > 0 and ns not in usage.d %}
+{% set _ = add(acc, 1, ns, qn, 'NOMETRICS', 'requests.cpu used=' ~ used['requests.cpu'] ~ ' no PodMetrics') %}
+{% endif %}
+{% endfor %}
+{{ {'rows': acc.rows, 'quotas': idx.l | length, 'errors': acc.errors} | to_json }}

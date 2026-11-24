@@ -1,0 +1,2 @@
+node-pressure report: ocp-dev
+RESULT OK crit=0 warn=0 nodes=3 healthy=3

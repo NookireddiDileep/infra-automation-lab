@@ -1,0 +1,58 @@
+---
+# In:  nodes_file, events_file (paths)
+# Out: check_report (text, byte-identical to the Bash/Python/Go report), check_result (OK|WARN|CRIT)
+- name: Load the saved node list and the saved event list
+  ansible.builtin.set_fact:
+    nodes_doc: "{{ lookup('ansible.builtin.file', nodes_file) | from_json }}"
+    events_doc: "{{ lookup('ansible.builtin.file', events_file) | from_json }}"
+
+- name: Refuse anything that is not a List (nodes)
+  ansible.builtin.assert:
+    that:
+      - nodes_doc is mapping
+      - nodes_doc['kind'] | default('') == 'List'
+      - nodes_doc['items'] is defined and nodes_doc['items'] is sequence and nodes_doc['items'] is not string
+    fail_msg: "nodes: not a List (expected kind List with items[]): {{ nodes_file }}"
+    quiet: true
+
+- name: Refuse anything that is not a List (events)
+  ansible.builtin.assert:
+    that:
+      - events_doc is mapping
+      - events_doc['kind'] | default('') == 'List'
+      - events_doc['items'] is defined and events_doc['items'] is sequence and events_doc['items'] is not string
+    fail_msg: "events: not a List (expected kind List with items[]): {{ events_file }}"
+    quiet: true
+
+- name: Judge every node (findings in emission order), then sort by severity, node, emission index
+  ansible.builtin.set_fact:
+    check_data: "{{ lookup('ansible.builtin.template', 'findings.j2') | from_json }}"
+
+- name: Refuse bad input instead of printing a half report
+  ansible.builtin.assert:
+    that: check_data['errors'] | length == 0
+    fail_msg: "{{ check_data['errors'] | first | default('') }}"
+    quiet: true
+
+- name: Render the report
+  ansible.builtin.set_fact:
+    check_result: "{{ result }}"
+    check_report: "{{ (lookup('ansible.builtin.template', 'report.j2') | trim) ~ nl }}"
+  vars:
+    nl: "\n"
+    rows: "{{ check_data['rows'] | sort(attribute='rank,node,idx', case_sensitive=true) }}"
+    nodes: "{{ check_data['nodes'] }}"
+    report_name: "{{ nodes_file | basename | regex_replace('(\\.nodes)?\\.json$', '') }}"
+    classes: "{{ ['NOTREADY', 'MEMORYPRESSURE', 'DISKPRESSURE', 'PIDPRESSURE', 'NOTAINT', 'EVICTIONSTORM', 'EVICTIONS'] | select('in', rows | map(attribute='cls') | list) | list }}"
+    crit: "{{ rows | selectattr('rank', 'equalto', 0) | list | length }}"
+    warn: "{{ rows | selectattr('rank', 'equalto', 1) | list | length }}"
+    flagged: "{{ rows | map(attribute='node') | unique | list | length }}"
+    result: "{{ 'CRIT' if crit | int > 0 else ('WARN' if warn | int > 0 else 'OK') }}"
+    hints:
+      NOTREADY: "kubelet is not posting Ready: oc describe node, oc adm node-logs NODE -u kubelet; pods are evicted after the unreachable toleration (300s)"
+      MEMORYPRESSURE: "memory.available is under the eviction threshold: find the top consumers (oc adm top pods), fix requests/limits, check kubelet systemReserved"
+      DISKPRESSURE: "nodefs/imagefs is low: crictl images / du on /var/lib/containers, rotate logs, check ephemeral-storage requests"
+      PIDPRESSURE: "pid.available is low: find a fork bomb or leaking process (ps -eLf), raise podPidsLimit only after you know why"
+      NOTAINT: "pressure is True but the node.kubernetes.io/*-pressure taint is missing: the scheduler may still place pods here"
+      EVICTIONSTORM: "5+ evictions on one node: the pressure is chronic; cordon, drain and fix the cause before it takes the node down"
+      EVICTIONS: "kubelet evicted pods here: the pressure came and went; compare victims' usage with their requests (BestEffort/Burstable go first)"

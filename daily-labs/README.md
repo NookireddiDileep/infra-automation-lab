@@ -15,6 +15,7 @@ Every day there's one realistic infra scenario (RHEL ops → OpenShift/Kubernete
 | [005](day-005-namespace-onboarding-check/) | 2026-11-19 | Namespace onboarding check: quota, limits, RBAC and NetworkPolicy vs one spec (missing, drift, leaked `cluster-admin`) | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
 | [006](day-006-tls-cert-expiry-audit/) | 2026-11-20 | TLS certificate expiry audit: expired, expiring soon, and renewed-on-disk-but-not-reloaded | 1 · Linux ops | ✅✅✅✅ | ⬜ Bash |
 | [007](day-007-quota-rightsizing-report/) | 2026-11-23 | ResourceQuota right-sizing: quota full vs padded requests vs real usage (FULL, NEAR, OVERQUOTA, OVER/UNDERREQUEST) | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
+| [008](day-008-node-pressure-eviction-analysis/) | 2026-11-24 | Node pressure & eviction analysis: Ready, Memory/Disk/PID pressure, missing taint, eviction storms by resource | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
 
 ### Folder convention
 ```

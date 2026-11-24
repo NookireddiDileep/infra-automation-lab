@@ -60,3 +60,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   CPU is compressible: the pod is throttled. Memory is not: under node pressure a Burstable pod over its request is evicted first, and at its limit it is OOMKilled. So memory under-requesting is CRIT in my report and CPU is WARN.
 - **How do you right-size requests without causing an outage?** (Daily 007)  
   Measure p95 over at least a week including peaks, set requests near p90, keep limit headroom, roll out gradually and watch CPU throttling and OOMs. Start with VPA in recommendation mode; never auto-lower stateful workloads.
+- **Pods got evicted overnight but the node is fine now. How do you investigate?** (Daily 008)  
+  Conditions are a snapshot, so go to the history: `oc get events -A --field-selector reason=Evicted` (they expire in about an hour), the evicted pod's `status.message` ("The node was low on resource: memory"), `oc describe node` for conditions and allocated resources, kubelet logs, and Prometheus for memory/disk series around that time. Name the resource, then the namespaces whose usage was above their requests.
+- **Evicted vs OOMKilled?** (Daily 008)  
+  OOMKilled is the kernel killing a container that hit its cgroup limit; the pod restarts in place. Evicted is the kubelet removing the whole pod to relieve node pressure (memory, disk, PIDs); the pod ends up Failed and a controller recreates it elsewhere. BestEffort and over-request Burstable pods go first.
+- **A node has `MemoryPressure=True` but still gets new pods. Why?** (Daily 008)  
+  The `node.kubernetes.io/memory-pressure:NoSchedule` taint is missing, or the pod tolerates it (DaemonSets do). Check `spec.taints` and tolerations, and make "pressure without taint" an explicit finding.

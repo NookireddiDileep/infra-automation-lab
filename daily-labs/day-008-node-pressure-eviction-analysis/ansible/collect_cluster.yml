@@ -1,0 +1,35 @@
+---
+# NOT part of `make test`: needs a cluster and the kubernetes.core collection (ansible-galaxy collection install kubernetes.core).
+# Saves live Nodes and Evicted events in the shape nodepressure.yml / nodepressure.sh expect.
+#   ansible-playbook collect_cluster.yml -e out_dir=/tmp -e name=mycluster
+- name: Snapshot Nodes and kubelet Evicted events from the current kubeconfig context
+  hosts: localhost
+  gather_facts: false
+  vars:
+    out_dir: /tmp
+    name: mycluster
+  tasks:
+    - name: Read every Node (read-only)
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Node
+      register: nodes
+
+    - name: Read Evicted events in all namespaces (the API keeps events for about an hour by default)
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Event
+        field_selectors:
+          - reason=Evicted
+      register: events
+
+    - name: Save both as kind List documents
+      ansible.builtin.copy:
+        content: "{{ {'apiVersion': 'v1', 'kind': 'List', 'items': item.items} | to_nice_json }}"
+        dest: "{{ out_dir }}/{{ name }}.{{ item.suffix }}.json"
+        mode: "0644"
+      loop:
+        - {suffix: nodes, items: "{{ nodes.resources }}"}
+        - {suffix: events, items: "{{ events.resources }}"}
+      loop_control:
+        label: "{{ item.suffix }}"

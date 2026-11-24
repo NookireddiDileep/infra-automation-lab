@@ -1,0 +1,74 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": ""
+  },
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "web-1.18a3f0",
+        "namespace": "payments"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "web-1"
+      },
+      "reason": "Evicted",
+      "message": "The node was low on resource: memory. Threshold quantity: 100Mi, available: 61Mi. Container app was using 2Gi, request is 512Mi, has larger consumption of memory. ",
+      "type": "Warning",
+      "source": {
+        "component": "kubelet",
+        "host": "node-01.example.com"
+      },
+      "lastTimestamp": "2026-11-23T22:10:00Z",
+      "count": 3
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "web-2.18a3f0",
+        "namespace": "payments"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "web-2"
+      },
+      "reason": "Evicted",
+      "message": "The node was low on resource: memory. Threshold quantity: 100Mi, available: 61Mi. Container app was using 2Gi, request is 512Mi, has larger consumption of memory. ",
+      "type": "Warning",
+      "source": {
+        "component": "kubelet",
+        "host": "node-01.example.com"
+      },
+      "lastTimestamp": "2026-11-23T22:10:00Z"
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Event",
+      "metadata": {
+        "name": "build-3.18a3f0",
+        "namespace": "payments"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "build-3"
+      },
+      "reason": "Evicted",
+      "message": "The node was low on resource: pids. Threshold quantity: 100Mi, available: 61Mi. Container app was using 2Gi, request is 512Mi, has larger consumption of pids. ",
+      "type": "Warning",
+      "source": {
+        "component": "kubelet",
+        "host": "node-03.example.com"
+      },
+      "lastTimestamp": "2026-11-23T22:10:00Z",
+      "count": 1
+    }
+  ]
+}

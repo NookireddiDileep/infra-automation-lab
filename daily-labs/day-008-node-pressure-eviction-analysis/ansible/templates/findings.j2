@@ -1,0 +1,81 @@
+{# JSON {rows, nodes, errors}: rows in emission order {rank, node, cls, text, idx}; the caller sorts them. trim_blocks is on, lstrip_blocks is off. #}
+{% set pressures = [['MemoryPressure', 'MEMORYPRESSURE', 'node.kubernetes.io/memory-pressure'], ['DiskPressure', 'DISKPRESSURE', 'node.kubernetes.io/disk-pressure'], ['PIDPressure', 'PIDPRESSURE', 'node.kubernetes.io/pid-pressure']] %}
+{% set judged = ['Ready', 'MemoryPressure', 'DiskPressure', 'PIDPressure'] %}
+{# '-' for anything that is not a non-empty string #}
+{% macro txt(v) -%}
+{{ v if (v is string and v | length > 0) else '-' }}
+{%- endmacro %}
+{% macro add(acc, rank, node, cls, detail) -%}
+{%- set acc.rows = acc.rows + [{'rank': rank, 'node': node, 'cls': cls, 'idx': acc.rows | length, 'text': ('CRIT' if rank == 0 else 'WARN') ~ ' ' ~ node ~ ' ' ~ cls ~ ' ' ~ detail}] -%}
+{%- endmacro %}
+{% set acc = namespace(rows=[], errors=[], evl=[], nodes=[], conds={}, taints=[]) %}
+{# --- kubelet Evicted events: one {h, r, n} per event; count defaults to 1 #}
+{% for e in events_doc['items'] | select('mapping') | selectattr('reason', 'defined') | selectattr('reason', 'equalto', 'Evicted') %}
+{% set src = e['source'] if (e['source'] is defined and e['source'] is mapping) else {} %}
+{% set host = src['host'] | default(none) %}
+{% set n = e['count'] if 'count' in e else 1 %}
+{% if host is not string or host == '' %}
+{% set acc.errors = acc.errors + ['events: Evicted event without source.host'] %}
+{% elif not (n is number and n is not boolean and n >= 1 and n == (n | int)) %}
+{% set acc.errors = acc.errors + ['events: bad count in Evicted event on ' ~ host] %}
+{% else %}
+{% set msg = e['message'] if (e['message'] is defined and e['message'] is string) else '' %}
+{% set mm = msg | regex_search('low on resource: [A-Za-z0-9-]+[.]') %}
+{% set res = (mm | regex_replace('^low on resource: ', '') | regex_replace('[.]$', '')) if mm else 'unknown' %}
+{% set acc.evl = acc.evl + [{'h': host, 'r': res, 'n': n | int}] %}
+{% endif %}
+{% endfor %}
+{# --- nodes #}
+{% for node in nodes_doc['items'] | select('mapping') | selectattr('kind', 'defined') | selectattr('kind', 'equalto', 'Node') %}
+{% set nm = (node['metadata'] if (node['metadata'] is defined and node['metadata'] is mapping) else {})['name'] | default(none) %}
+{% if nm is not string or nm == '' %}
+{% set acc.errors = acc.errors + ['nodes: Node without metadata.name'] %}
+{% else %}
+{% set acc.nodes = acc.nodes + [node] %}
+{% endif %}
+{% endfor %}
+{% for node in acc.nodes | sort(attribute='metadata.name', case_sensitive=true) %}
+{% set name = node['metadata']['name'] %}
+{% set st = node['status'] if (node['status'] is defined and node['status'] is mapping) else {} %}
+{% set sp = node['spec'] if (node['spec'] is defined and node['spec'] is mapping) else {} %}
+{% set acc.conds = {} %}
+{% for c in (st['conditions'] if (st['conditions'] is defined and st['conditions'] is sequence and st['conditions'] is not string) else []) | select('mapping') %}
+{% if c['type'] is defined and c['type'] in judged %}
+{% if c['status'] is defined and c['status'] in ['True', 'False', 'Unknown'] %}
+{% set acc.conds = acc.conds | combine({c['type']: c}) %}
+{% else %}
+{% set acc.errors = acc.errors + ['nodes: bad condition status in ' ~ name ~ ': ' ~ c['type']] %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% set acc.taints = [] %}
+{% for t in (sp['taints'] if (sp['taints'] is defined and sp['taints'] is sequence and sp['taints'] is not string) else []) | select('mapping') %}
+{% if t['key'] is defined and t['key'] is string %}
+{% set acc.taints = acc.taints + [t['key']] %}
+{% endif %}
+{% endfor %}
+{% if 'Ready' not in acc.conds %}
+{{ add(acc, 0, name, 'NOTREADY', 'status=Missing reason=-') }}
+{% elif acc.conds['Ready']['status'] != 'True' %}
+{{ add(acc, 0, name, 'NOTREADY', 'status=' ~ acc.conds['Ready']['status'] ~ ' reason=' ~ txt(acc.conds['Ready']['reason'] | default(none))) }}
+{% endif %}
+{% for p in pressures %}
+{% if p[0] in acc.conds and acc.conds[p[0]]['status'] == 'True' %}
+{% set c = acc.conds[p[0]] %}
+{{ add(acc, 0, name, p[1], 'since=' ~ txt(c['lastTransitionTime'] | default(none)) ~ ' reason=' ~ txt(c['reason'] | default(none))) }}
+{% if p[2] not in acc.taints %}
+{{ add(acc, 1, name, 'NOTAINT', p[2]) }}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% set hits = acc.evl | selectattr('h', 'equalto', name) | list %}
+{% set total = hits | map(attribute='n') | sum %}
+{% if total > 0 %}
+{% set parts = [] %}
+{% for r in hits | map(attribute='r') | unique | sort(case_sensitive=true) %}
+{% set _ = parts.append(r ~ '=' ~ (hits | selectattr('r', 'equalto', r) | map(attribute='n') | sum)) %}
+{% endfor %}
+{{ add(acc, 0 if total >= 5 else 1, name, 'EVICTIONSTORM' if total >= 5 else 'EVICTIONS', 'total=' ~ total ~ ' ' ~ parts | join(' ')) }}
+{% endif %}
+{% endfor %}
+{{ {'rows': acc.rows, 'nodes': acc.nodes | length, 'errors': acc.errors} | to_json }}

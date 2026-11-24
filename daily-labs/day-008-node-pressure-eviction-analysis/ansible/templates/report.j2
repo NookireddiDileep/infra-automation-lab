@@ -1,0 +1,8 @@
+node-pressure report: {{ report_name }}
+{% for r in rows %}
+{{ r.text }}
+{% endfor %}
+{% for c in classes %}
+HINT {{ c }}: {{ hints[c] }}
+{% endfor %}
+RESULT {{ result }} crit={{ crit }} warn={{ warn }} nodes={{ nodes }} healthy={{ nodes - flagged }}

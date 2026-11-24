@@ -1,0 +1,17 @@
+node-pressure report: ocp-prod
+CRIT node-02.example.com NOTREADY status=Unknown reason=NodeStatusUnknown
+CRIT node-03.example.com MEMORYPRESSURE since=2026-11-23T21:58:10Z reason=KubeletHasInsufficientMemory
+CRIT node-03.example.com EVICTIONSTORM total=6 ephemeral-storage=1 memory=5
+CRIT node-04.example.com DISKPRESSURE since=2026-11-23T22:31:02Z reason=KubeletHasDiskPressure
+CRIT node-05.example.com PIDPRESSURE since=2026-11-24T01:12:45Z reason=KubeletHasInsufficientPID
+WARN node-04.example.com NOTAINT node.kubernetes.io/disk-pressure
+WARN node-04.example.com EVICTIONS total=2 ephemeral-storage=2
+WARN node-06.example.com EVICTIONS total=1 memory=1
+HINT NOTREADY: kubelet is not posting Ready: oc describe node, oc adm node-logs NODE -u kubelet; pods are evicted after the unreachable toleration (300s)
+HINT MEMORYPRESSURE: memory.available is under the eviction threshold: find the top consumers (oc adm top pods), fix requests/limits, check kubelet systemReserved
+HINT DISKPRESSURE: nodefs/imagefs is low: crictl images / du on /var/lib/containers, rotate logs, check ephemeral-storage requests
+HINT PIDPRESSURE: pid.available is low: find a fork bomb or leaking process (ps -eLf), raise podPidsLimit only after you know why
+HINT NOTAINT: pressure is True but the node.kubernetes.io/*-pressure taint is missing: the scheduler may still place pods here
+HINT EVICTIONSTORM: 5+ evictions on one node: the pressure is chronic; cordon, drain and fix the cause before it takes the node down
+HINT EVICTIONS: kubelet evicted pods here: the pressure came and went; compare victims' usage with their requests (BestEffort/Burstable go first)
+RESULT CRIT crit=5 warn=3 nodes=8 healthy=3

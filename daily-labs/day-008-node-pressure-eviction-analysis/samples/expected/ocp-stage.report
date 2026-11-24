@@ -1,0 +1,5 @@
+node-pressure report: ocp-stage
+WARN node-01.example.com EVICTIONS total=4 memory=4
+WARN node-03.example.com EVICTIONS total=1 pids=1
+HINT EVICTIONS: kubelet evicted pods here: the pressure came and went; compare victims' usage with their requests (BestEffort/Burstable go first)
+RESULT WARN crit=0 warn=2 nodes=4 healthy=2

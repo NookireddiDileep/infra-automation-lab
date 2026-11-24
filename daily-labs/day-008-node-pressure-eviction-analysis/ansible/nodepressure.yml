@@ -1,0 +1,36 @@
+---
+# Judge saved Node conditions and kubelet Evicted events and write the report. Idempotent: same input, same file, changed=0 on re-run.
+#   ansible-playbook nodepressure.yml -e nodes_file=../samples/ocp-prod.nodes.json -e events_file=../samples/ocp-prod.events.json
+#   ansible-playbook nodepressure.yml ... -e fail_on_crit=true     # gate a pipeline
+- name: Node pressure and eviction analysis (offline, against saved oc JSON)
+  hosts: localhost
+  gather_facts: false
+  vars:
+    nodes_file: "{{ playbook_dir }}/../samples/ocp-prod.nodes.json"
+    events_file: "{{ playbook_dir }}/../samples/ocp-prod.events.json"
+    fail_on_crit: false
+    out_dir: "{{ playbook_dir }}/reports"
+  tasks:
+    - name: Run the check
+      ansible.builtin.include_tasks: tasks/check.yml
+
+    - name: Make sure the output directory exists
+      ansible.builtin.file:
+        path: "{{ out_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Write the report
+      ansible.builtin.copy:
+        content: "{{ check_report }}"
+        dest: "{{ out_dir }}/{{ nodes_file | basename | regex_replace('(\\.nodes)?\\.json$', '') }}.report"
+        mode: "0644"
+
+    - name: Show the verdict
+      ansible.builtin.debug:
+        msg: "{{ check_report.split('\n')[-2] }}"
+
+    - name: Gate on CRIT when asked (the playbook equivalent of exit code 2)
+      ansible.builtin.fail:
+        msg: "{{ check_report.split('\n')[-2] }}"
+      when: fail_on_crit | bool and check_result == 'CRIT'

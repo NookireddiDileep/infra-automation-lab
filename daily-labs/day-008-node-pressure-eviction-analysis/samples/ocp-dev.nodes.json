@@ -1,0 +1,171 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": ""
+  },
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Node",
+      "metadata": {
+        "name": "node-01.example.com",
+        "labels": {
+          "node-role.kubernetes.io/worker": ""
+        }
+      },
+      "spec": {
+        "providerID": "fake://node-01.example.com.example.com"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "MemoryPressure",
+            "status": "False",
+            "reason": "KubeletHasSufficientMemory",
+            "message": "kubelet has sufficient memory available",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          },
+          {
+            "type": "DiskPressure",
+            "status": "False",
+            "reason": "KubeletHasNoDiskPressure",
+            "message": "kubelet has no disk pressure",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          },
+          {
+            "type": "PIDPressure",
+            "status": "False",
+            "reason": "KubeletHasSufficientPID",
+            "message": "kubelet has sufficient PID available",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "KubeletReady",
+            "message": "kubelet is posting ready status",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          }
+        ],
+        "allocatable": {
+          "cpu": "15500m",
+          "memory": "63Gi",
+          "pods": "250"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Node",
+      "metadata": {
+        "name": "node-02.example.com",
+        "labels": {
+          "node-role.kubernetes.io/worker": ""
+        }
+      },
+      "spec": {
+        "providerID": "fake://node-02.example.com.example.com"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "MemoryPressure",
+            "status": "False",
+            "reason": "KubeletHasSufficientMemory",
+            "message": "kubelet has sufficient memory available",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          },
+          {
+            "type": "DiskPressure",
+            "status": "False",
+            "reason": "KubeletHasNoDiskPressure",
+            "message": "kubelet has no disk pressure",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          },
+          {
+            "type": "PIDPressure",
+            "status": "False",
+            "reason": "KubeletHasSufficientPID",
+            "message": "kubelet has sufficient PID available",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "KubeletReady",
+            "message": "kubelet is posting ready status",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          }
+        ],
+        "allocatable": {
+          "cpu": "15500m",
+          "memory": "63Gi",
+          "pods": "250"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Node",
+      "metadata": {
+        "name": "node-03.example.com",
+        "labels": {
+          "node-role.kubernetes.io/master": ""
+        }
+      },
+      "spec": {
+        "providerID": "fake://node-03.example.com.example.com"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "MemoryPressure",
+            "status": "False",
+            "reason": "KubeletHasSufficientMemory",
+            "message": "kubelet has sufficient memory available",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          },
+          {
+            "type": "DiskPressure",
+            "status": "False",
+            "reason": "KubeletHasNoDiskPressure",
+            "message": "kubelet has no disk pressure",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          },
+          {
+            "type": "PIDPressure",
+            "status": "False",
+            "reason": "KubeletHasSufficientPID",
+            "message": "kubelet has sufficient PID available",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "KubeletReady",
+            "message": "kubelet is posting ready status",
+            "lastHeartbeatTime": "2026-11-24T03:00:00Z",
+            "lastTransitionTime": "2026-11-18T06:00:00Z"
+          }
+        ],
+        "allocatable": {
+          "cpu": "15500m",
+          "memory": "63Gi",
+          "pods": "250"
+        }
+      }
+    }
+  ]
+}

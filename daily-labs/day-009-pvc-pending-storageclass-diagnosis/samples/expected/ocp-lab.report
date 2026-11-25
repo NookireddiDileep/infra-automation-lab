@@ -1,0 +1,4 @@
+pvc-binding report: ocp-lab
+CRIT demo/db-0 NOSC class=-
+HINT NOSC: no storageClassName and no default StorageClass: set storageclass.kubernetes.io/is-default-class=true on one class or name a class in the claim
+RESULT CRIT crit=1 warn=0 info=0 pvcs=2 healthy=1

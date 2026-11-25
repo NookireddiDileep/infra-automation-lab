@@ -1,0 +1,98 @@
+{# JSON {rows, pvcs, errors}: rows in emission order {rank, subject, cls, text, pvc, idx}; the caller sorts them. trim_blocks is on, lstrip_blocks is off. #}
+{% set sev = ['CRIT', 'WARN', 'INFO'] %}
+{% set default_ann = 'storageclass.kubernetes.io/is-default-class' %}
+{% set selected_ann = 'volume.kubernetes.io/selected-node' %}
+{% set no_prov = 'kubernetes.io/no-provisioner' %}
+{# '-' for anything that is not a non-empty string #}
+{% macro txt(v) -%}
+{{ v if (v is string and v | length > 0) else '-' }}
+{%- endmacro %}
+{% macro add(acc, rank, subject, cls, detail, is_pvc) -%}
+{%- set acc.rows = acc.rows + [{'rank': rank, 'subject': subject, 'cls': cls, 'pvc': is_pvc, 'idx': acc.rows | length, 'text': sev[rank] ~ ' ' ~ subject ~ ' ' ~ cls ~ ' ' ~ detail}] -%}
+{%- endmacro %}
+{% set acc = namespace(rows=[], errors=[], cls={}, claims=[], defaults=[]) %}
+{# --- StorageClasses: name -> {mode, prov, default} #}
+{% for it in scs_doc['items'] | select('mapping') | selectattr('kind', 'defined') | selectattr('kind', 'equalto', 'StorageClass') %}
+{% set md = it['metadata'] if (it['metadata'] is defined and it['metadata'] is mapping) else {} %}
+{% set nm = md['name'] | default(none) %}
+{% set mode = it['volumeBindingMode'] | default(none) %}
+{% set mode = 'Immediate' if mode is none else mode %}
+{% if nm is not string or nm == '' %}
+{% set acc.errors = acc.errors + ['storageclasses: StorageClass without metadata.name'] %}
+{% elif mode not in ['Immediate', 'WaitForFirstConsumer'] %}
+{% set acc.errors = acc.errors + ['storageclasses: bad volumeBindingMode in ' ~ nm] %}
+{% else %}
+{% set ann = md['annotations'] if (md['annotations'] is defined and md['annotations'] is mapping) else {} %}
+{% set acc.cls = acc.cls | combine({nm: {'mode': mode, 'prov': it['provisioner'] if (it['provisioner'] is defined and it['provisioner'] is string) else '-', 'default': (ann[default_ann] | default(none)) == 'true'}}) %}
+{% endif %}
+{% endfor %}
+{% set names = acc.cls.keys() | sort(case_sensitive=true) | list %}
+{% for n in names %}
+{% if acc.cls[n]['default'] %}
+{% set acc.defaults = acc.defaults + [n] %}
+{% endif %}
+{% endfor %}
+{% set default_class = acc.defaults[0] if acc.defaults | length > 0 else none %}
+{# --- claims: validate the identity first, then judge in "namespace/name" byte order #}
+{% for it in pvcs_doc['items'] | select('mapping') | selectattr('kind', 'defined') | selectattr('kind', 'equalto', 'PersistentVolumeClaim') %}
+{% set md = it['metadata'] if (it['metadata'] is defined and it['metadata'] is mapping) else {} %}
+{% set ns = md['namespace'] | default(none) %}
+{% set nm = md['name'] | default(none) %}
+{% if ns is not string or ns == '' or nm is not string or nm == '' %}
+{% set acc.errors = acc.errors + ['pvcs: PersistentVolumeClaim without metadata.namespace or metadata.name'] %}
+{% else %}
+{% set acc.claims = acc.claims + [{'s': ns ~ '/' ~ nm, 'it': it}] %}
+{% endif %}
+{% endfor %}
+{% for c in acc.claims | sort(attribute='s', case_sensitive=true) %}
+{% set it = c['it'] %}
+{% set subject = c['s'] %}
+{% set md = it['metadata'] %}
+{% set spec = it['spec'] if (it['spec'] is defined and it['spec'] is mapping) else {} %}
+{% set status = it['status'] if (it['status'] is defined and it['status'] is mapping) else {} %}
+{% set phase = status['phase'] | default(none) %}
+{% set sc0 = spec['storageClassName'] | default(none) %}
+{% if phase not in ['Pending', 'Bound', 'Lost'] %}
+{% set acc.errors = acc.errors + ['pvcs: bad phase in ' ~ subject] %}
+{% elif sc0 is not none and sc0 is not string %}
+{% set acc.errors = acc.errors + ['pvcs: bad storageClassName in ' ~ subject] %}
+{% elif phase == 'Lost' %}
+{{ add(acc, 0, subject, 'LOST', 'volume=' ~ txt(spec['volumeName'] | default(none)), true) }}
+{% elif phase == 'Pending' %}
+{% set sc = sc0 if sc0 is not none else default_class %}
+{% set via = ' via=default' if sc0 is none else '' %}
+{% if sc is none %}
+{{ add(acc, 0, subject, 'NOSC', 'class=-', true) }}
+{% elif sc == '' %}
+{{ add(acc, 0, subject, 'NOPV', 'class=-', true) }}
+{% elif sc not in acc.cls %}
+{{ add(acc, 0, subject, 'UNKNOWNSC', 'class=' ~ sc, true) }}
+{% else %}
+{% set cl = acc.cls[sc] %}
+{% if cl['mode'] == 'WaitForFirstConsumer' %}
+{% set ann = md['annotations'] if (md['annotations'] is defined and md['annotations'] is mapping) else {} %}
+{% set node = ann[selected_ann] | default(none) %}
+{% if node is string and node != '' %}
+{{ add(acc, 0, subject, 'SELECTEDSTUCK', 'class=' ~ sc ~ ' node=' ~ node ~ ' provisioner=' ~ cl['prov'] ~ via, true) }}
+{% else %}
+{{ add(acc, 2, subject, 'WAITFORCONSUMER', 'class=' ~ sc ~ ' mode=WaitForFirstConsumer' ~ via, true) }}
+{% endif %}
+{% elif cl['prov'] == no_prov %}
+{{ add(acc, 0, subject, 'NOPV', 'class=' ~ sc ~ via, true) }}
+{% else %}
+{{ add(acc, 0, subject, 'PROVISIONFAILED', 'class=' ~ sc ~ ' provisioner=' ~ cl['prov'] ~ via, true) }}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{# --- classes: emitted after the claims, by name #}
+{% for n in names %}
+{% set cl = acc.cls[n] %}
+{% if acc.defaults | length > 1 and cl['default'] %}
+{{ add(acc, 1, 'sc/' ~ n, 'MULTIDEFAULT', 'defaults=' ~ acc.defaults | join(','), false) }}
+{% endif %}
+{% if cl['prov'] == no_prov and cl['mode'] != 'WaitForFirstConsumer' %}
+{{ add(acc, 1, 'sc/' ~ n, 'LOCALIMMEDIATE', 'provisioner=' ~ no_prov ~ ' mode=' ~ cl['mode'], false) }}
+{% endif %}
+{% endfor %}
+{{ {'rows': acc.rows, 'pvcs': acc.claims | length, 'errors': acc.errors} | to_json }}

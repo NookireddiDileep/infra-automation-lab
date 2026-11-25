@@ -1,0 +1,6 @@
+pvc-binding report: ocp-stage
+WARN sc/local-nvme LOCALIMMEDIATE provisioner=kubernetes.io/no-provisioner mode=Immediate
+INFO web/data-0 WAITFORCONSUMER class=gp3-csi mode=WaitForFirstConsumer
+HINT LOCALIMMEDIATE: a no-provisioner class bound Immediate binds before scheduling and strands pods: use volumeBindingMode WaitForFirstConsumer
+HINT WAITFORCONSUMER: not a fault: the claim stays Pending until a pod that uses it is scheduled; if no pod exists yet, this is expected
+RESULT WARN crit=0 warn=1 info=1 pvcs=3 healthy=2

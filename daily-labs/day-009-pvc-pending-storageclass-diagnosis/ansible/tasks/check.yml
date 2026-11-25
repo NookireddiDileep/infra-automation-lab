@@ -1,0 +1,61 @@
+---
+# In:  pvcs_file, scs_file (paths)
+# Out: check_report (text, byte-identical to the Bash/Python/Go report), check_result (OK|WARN|CRIT)
+- name: Load the saved PVC list and the saved StorageClass list
+  ansible.builtin.set_fact:
+    pvcs_doc: "{{ lookup('ansible.builtin.file', pvcs_file) | from_json }}"
+    scs_doc: "{{ lookup('ansible.builtin.file', scs_file) | from_json }}"
+
+- name: Refuse anything that is not a List (pvcs)
+  ansible.builtin.assert:
+    that:
+      - pvcs_doc is mapping
+      - pvcs_doc['kind'] | default('') == 'List'
+      - pvcs_doc['items'] is defined and pvcs_doc['items'] is sequence and pvcs_doc['items'] is not string
+    fail_msg: "pvcs: not a List (expected kind List with items[]): {{ pvcs_file }}"
+    quiet: true
+
+- name: Refuse anything that is not a List (storageclasses)
+  ansible.builtin.assert:
+    that:
+      - scs_doc is mapping
+      - scs_doc['kind'] | default('') == 'List'
+      - scs_doc['items'] is defined and scs_doc['items'] is sequence and scs_doc['items'] is not string
+    fail_msg: "storageclasses: not a List (expected kind List with items[]): {{ scs_file }}"
+    quiet: true
+
+- name: Judge every claim and class (findings in emission order)
+  ansible.builtin.set_fact:
+    check_data: "{{ lookup('ansible.builtin.template', 'findings.j2') | from_json }}"
+
+- name: Refuse bad input instead of printing a half report
+  ansible.builtin.assert:
+    that: check_data['errors'] | length == 0
+    fail_msg: "{{ check_data['errors'] | first | default('') }}"
+    quiet: true
+
+- name: Render the report
+  ansible.builtin.set_fact:
+    check_result: "{{ result }}"
+    check_report: "{{ (lookup('ansible.builtin.template', 'report.j2') | trim) ~ nl }}"
+  vars:
+    nl: "\n"
+    rows: "{{ check_data['rows'] | sort(attribute='rank,subject,idx', case_sensitive=true) }}"
+    pvcs: "{{ check_data['pvcs'] }}"
+    report_name: "{{ pvcs_file | basename | regex_replace('(\\.pvcs)?\\.json$', '') }}"
+    classes: "{{ ['LOST', 'NOSC', 'NOPV', 'UNKNOWNSC', 'SELECTEDSTUCK', 'PROVISIONFAILED', 'MULTIDEFAULT', 'LOCALIMMEDIATE', 'WAITFORCONSUMER'] | select('in', rows | map(attribute='cls') | list) | list }}"
+    crit: "{{ rows | selectattr('rank', 'equalto', 0) | list | length }}"
+    warn: "{{ rows | selectattr('rank', 'equalto', 1) | list | length }}"
+    info: "{{ rows | selectattr('rank', 'equalto', 2) | list | length }}"
+    flagged: "{{ rows | selectattr('pvc') | list | length }}"
+    result: "{{ 'CRIT' if crit | int > 0 else ('WARN' if warn | int > 0 else 'OK') }}"
+    hints:
+      LOST: "the PV behind this claim is gone: oc get pv, check the backend volume; restore from snapshot or recreate, never delete the claim first"
+      NOSC: "no storageClassName and no default StorageClass: set storageclass.kubernetes.io/is-default-class=true on one class or name a class in the claim"
+      NOPV: "this claim needs a pre-created PV (empty class or no-provisioner): oc get pv, match size, access mode and class, or create one"
+      UNKNOWNSC: "the named StorageClass does not exist: oc get sc, fix the typo in the claim or create the class"
+      SELECTEDSTUCK: "the scheduler picked a node but the provisioner could not create the volume there: oc describe pvc (ProvisioningFailed), check zone and topology of that node"
+      PROVISIONFAILED: "Immediate class, dynamic provisioner, still Pending: oc describe pvc for ProvisioningFailed, check the CSI controller pods and quota on the backend"
+      MULTIDEFAULT: "more than one default StorageClass: claims without a class get an arbitrary one; keep exactly one default"
+      LOCALIMMEDIATE: "a no-provisioner class bound Immediate binds before scheduling and strands pods: use volumeBindingMode WaitForFirstConsumer"
+      WAITFORCONSUMER: "not a fault: the claim stays Pending until a pod that uses it is scheduled; if no pod exists yet, this is expected"

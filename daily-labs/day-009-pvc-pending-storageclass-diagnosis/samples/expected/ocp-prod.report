@@ -1,0 +1,20 @@
+pvc-binding report: ocp-prod
+CRIT logging/es-0 LOST volume=pvc-00000004-0000-4000-8000-000000000000
+CRIT logging/es-1 NOPV class=-
+CRIT monitoring/prom-0 NOPV class=local-fast
+CRIT payments/ledger-0 UNKNOWNSC class=gold-ssd
+CRIT payments/ledger-1 PROVISIONFAILED class=ocs-rbd provisioner=openshift-storage.rbd.csi.ceph.com
+CRIT shop/data-1 SELECTEDSTUCK class=gp3-csi node=node-02.example.com provisioner=ebs.csi.aws.com
+WARN sc/gp3-csi MULTIDEFAULT defaults=gp3-csi,legacy-nfs
+WARN sc/legacy-nfs MULTIDEFAULT defaults=gp3-csi,legacy-nfs
+WARN sc/local-fast LOCALIMMEDIATE provisioner=kubernetes.io/no-provisioner mode=Immediate
+INFO shop/data-0 WAITFORCONSUMER class=gp3-csi mode=WaitForFirstConsumer via=default
+HINT LOST: the PV behind this claim is gone: oc get pv, check the backend volume; restore from snapshot or recreate, never delete the claim first
+HINT NOPV: this claim needs a pre-created PV (empty class or no-provisioner): oc get pv, match size, access mode and class, or create one
+HINT UNKNOWNSC: the named StorageClass does not exist: oc get sc, fix the typo in the claim or create the class
+HINT SELECTEDSTUCK: the scheduler picked a node but the provisioner could not create the volume there: oc describe pvc (ProvisioningFailed), check zone and topology of that node
+HINT PROVISIONFAILED: Immediate class, dynamic provisioner, still Pending: oc describe pvc for ProvisioningFailed, check the CSI controller pods and quota on the backend
+HINT MULTIDEFAULT: more than one default StorageClass: claims without a class get an arbitrary one; keep exactly one default
+HINT LOCALIMMEDIATE: a no-provisioner class bound Immediate binds before scheduling and strands pods: use volumeBindingMode WaitForFirstConsumer
+HINT WAITFORCONSUMER: not a fault: the claim stays Pending until a pod that uses it is scheduled; if no pod exists yet, this is expected
+RESULT CRIT crit=6 warn=3 info=1 pvcs=10 healthy=3

@@ -1,0 +1,8 @@
+pvc-binding report: {{ report_name }}
+{% for r in rows %}
+{{ r.text }}
+{% endfor %}
+{% for c in classes %}
+HINT {{ c }}: {{ hints[c] }}
+{% endfor %}
+RESULT {{ result }} crit={{ crit }} warn={{ warn }} info={{ info }} pvcs={{ pvcs }} healthy={{ pvcs - flagged }}

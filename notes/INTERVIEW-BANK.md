@@ -66,3 +66,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   OOMKilled is the kernel killing a container that hit its cgroup limit; the pod restarts in place. Evicted is the kubelet removing the whole pod to relieve node pressure (memory, disk, PIDs); the pod ends up Failed and a controller recreates it elsewhere. BestEffort and over-request Burstable pods go first.
 - **A node has `MemoryPressure=True` but still gets new pods. Why?** (Daily 008)  
   The `node.kubernetes.io/memory-pressure:NoSchedule` taint is missing, or the pod tolerates it (DaemonSets do). Check `spec.taints` and tolerations, and make "pressure without taint" an explicit finding.
+- **A PVC is Pending. How do you tell a bug from normal behaviour?** (Daily 009)  
+  `oc describe pvc` events decide: "waiting for first consumer" is a WaitForFirstConsumer class with no pod yet (normal); `ProvisioningFailed` is the provisioner or backend; "storageclass not found" is a typo. Then check the `selected-node` annotation (scheduler chose a node, provisioning failed there: topology), the CSI controller pods, and backend quota.
+- **`Immediate` vs `WaitForFirstConsumer`, and why does it matter?** (Daily 009)  
+  Immediate binds as soon as the claim exists, ignoring where the pod will run; for zonal or local storage the volume can end up where the pod cannot be scheduled. WFFC waits for the scheduler's node choice, so the volume honours zone, affinity and taints. Platform baseline: WFFC for anything topology-bound.
+- **What is the difference between an absent `storageClassName` and an empty string?** (Daily 009)  
+  Absent: admission fills in the default class (if any). `""`: no class on purpose, so only a pre-created PV without a class can satisfy it and nothing is provisioned. Confusing the two is a classic reason a claim hangs forever.

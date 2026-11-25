@@ -66,6 +66,7 @@ templates/     session-note.md · project-readme.md
 | Daily 006 | TLS certificate expiry audit: expired, expiring, renewed-but-not-reloaded (Bash/Ansible/Python/Go) | `daily-labs/day-006-tls-cert-expiry-audit/` | [README](daily-labs/day-006-tls-cert-expiry-audit/README.md) |
 | Daily 007 | ResourceQuota right-sizing: full quota vs padded requests vs real usage (Bash/Ansible/Python/Go) | `daily-labs/day-007-quota-rightsizing-report/` | [README](daily-labs/day-007-quota-rightsizing-report/README.md) |
 | Daily 008 | Node pressure & eviction analysis: pressure conditions, missing taints, eviction storms (Bash/Ansible/Python/Go) | `daily-labs/day-008-node-pressure-eviction-analysis/` | [README](daily-labs/day-008-node-pressure-eviction-analysis/README.md) |
+| Daily 009 | PVC Pending diagnosis: missing vs empty class, WaitForFirstConsumer vs Immediate, selected-node stuck (Bash/Ansible/Python/Go) | `daily-labs/day-009-pvc-pending-storageclass-diagnosis/` | [README](daily-labs/day-009-pvc-pending-storageclass-diagnosis/README.md) |
 | Bash W1 Wed | for / while / while read | `01-bash/week01-foundations/ping_check.sh` | [wed-loops.md](01-bash/week01-foundations/wed-loops.md) |
 
 ---

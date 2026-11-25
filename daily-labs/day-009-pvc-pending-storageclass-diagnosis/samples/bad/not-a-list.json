@@ -1,0 +1,6 @@
+{
+  "kind": "PersistentVolumeClaim",
+  "metadata": {
+    "name": "x"
+  }
+}

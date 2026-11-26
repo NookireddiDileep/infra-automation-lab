@@ -1,0 +1,33 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": ""
+  },
+  "items": [
+    {
+      "apiVersion": "config.openshift.io/v1",
+      "kind": "ClusterOperator",
+      "metadata": {
+        "name": "etcd",
+        "creationTimestamp": "2026-10-01T08:00:00Z"
+      },
+      "spec": {},
+      "status": {
+        "conditions": [
+          {
+            "type": "Available",
+            "status": "Maybe",
+            "lastTransitionTime": "2026-11-20T06:00:00Z"
+          }
+        ],
+        "versions": [
+          {
+            "name": "operator",
+            "version": "4.16.12"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+---
+# Self-test: the Ansible report must be byte-identical to the golden files that Bash, Python and Go also match.
+- name: Compare against samples/expected
+  hosts: localhost
+  gather_facts: false
+  vars:
+    cases:
+      ocp-prod: CRIT
+      ocp-lab: CRIT
+      ocp-stage: WARN
+      ocp-dev: OK
+  tasks:
+    - name: Check and compare each sample
+      ansible.builtin.include_tasks: tasks/check_sample.yml
+      vars:
+        cos_file: "{{ playbook_dir }}/../samples/{{ case.key }}.clusteroperators.json"
+        mcps_file: "{{ playbook_dir }}/../samples/{{ case.key }}.mcps.json"
+        nl: "\n"
+        # the file lookup strips the trailing newline; put it back so the comparison is byte-exact
+        golden: "{{ lookup('ansible.builtin.file', playbook_dir ~ '/../samples/expected/' ~ case.key ~ '.report') ~ nl }}"
+        want_result: "{{ case.value }}"
+      loop: "{{ cases | dict2items }}"
+      loop_control:
+        loop_var: case
+        label: "{{ case.key }}"
+
+    - name: Bad input must be refused with a clear message, never a half report
+      ansible.builtin.include_tasks: tasks/refuse.yml
+      vars:
+        cos_file: "{{ playbook_dir }}/../samples/{{ case.cos }}"
+        mcps_file: "{{ playbook_dir }}/../samples/{{ case.mcps }}"
+        want_msg: "{{ case.msg }}"
+      loop:
+        - {cos: bad/co-bad-status.json, mcps: ocp-dev.mcps.json, msg: "clusteroperators: bad condition status in etcd"}
+        - {cos: ocp-dev.clusteroperators.json, mcps: bad/mcps-bad-count.json, msg: "mcps: bad machineCount in worker"}
+        - {cos: bad/not-a-list.json, mcps: ocp-dev.mcps.json, msg: "clusteroperators: not a List"}
+        - {cos: ocp-dev.clusteroperators.json, mcps: bad/not-a-list.json, msg: "mcps: not a List"}
+      loop_control:
+        loop_var: case
+        label: "{{ case.msg }}"

@@ -1,0 +1,33 @@
+---
+# NOT part of `make test`: needs a cluster and the kubernetes.core collection (ansible-galaxy collection install kubernetes.core).
+# Saves live ClusterOperators and MachineConfigPools in the shape upgradegate.yml / upgradegate.sh expect.
+#   ansible-playbook collect_cluster.yml -e out_dir=/tmp -e name=mycluster
+- name: Snapshot ClusterOperators and MachineConfigPools from the current kubeconfig context
+  hosts: localhost
+  gather_facts: false
+  vars:
+    out_dir: /tmp
+    name: mycluster
+  tasks:
+    - name: Read every ClusterOperator (read-only)
+      kubernetes.core.k8s_info:
+        api_version: config.openshift.io/v1
+        kind: ClusterOperator
+      register: cos
+
+    - name: Read every MachineConfigPool (read-only)
+      kubernetes.core.k8s_info:
+        api_version: machineconfiguration.openshift.io/v1
+        kind: MachineConfigPool
+      register: mcps
+
+    - name: Save both as kind List documents
+      ansible.builtin.copy:
+        content: "{{ {'apiVersion': 'v1', 'kind': 'List', 'items': item.items} | to_nice_json }}"
+        dest: "{{ out_dir }}/{{ name }}.{{ item.suffix }}.json"
+        mode: "0644"
+      loop:
+        - {suffix: clusteroperators, items: "{{ cos.resources }}"}
+        - {suffix: mcps, items: "{{ mcps.resources }}"}
+      loop_control:
+        label: "{{ item.suffix }}"

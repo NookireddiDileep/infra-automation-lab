@@ -1,0 +1,6 @@
+upgrade-gate report: ocp-stage
+WARN co/console PROGRESSING reason=SyncLoopRefresh_InProgress
+WARN mcp/worker UPDATING degraded=0 unavailable=1 updated=2/4
+HINT PROGRESSING: an operator is mid-rollout: wait for Progressing=False, or the upgrade stacks a second rollout on top
+HINT UPDATING: the pool is rolling out a rendered config: let it finish, a cluster upgrade now would queue a second change on the same nodes
+RESULT WARN verdict=CAUTION crit=0 warn=2 operators=8 pools=2 healthy=8

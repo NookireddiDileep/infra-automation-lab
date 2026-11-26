@@ -1,0 +1,11 @@
+---
+- name: Run the check and expect it to fail
+  block:
+    - ansible.builtin.include_tasks: check.yml
+    - ansible.builtin.fail:
+        msg: "bad input was accepted: {{ want_msg }}"
+  rescue:
+    - ansible.builtin.assert:
+        that: want_msg in ansible_failed_result.msg
+        quiet: true
+        success_msg: "ok: refused ({{ want_msg }})"

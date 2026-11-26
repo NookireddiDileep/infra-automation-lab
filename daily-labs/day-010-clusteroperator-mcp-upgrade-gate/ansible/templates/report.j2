@@ -1,0 +1,8 @@
+upgrade-gate report: {{ report_name }}
+{% for r in rows %}
+{{ levels[r.rank] }} {{ r.subject }} {{ r.cls }} {{ r.detail }}
+{% endfor %}
+{% for c in classes %}
+HINT {{ c }}: {{ hints[c] }}
+{% endfor %}
+RESULT {{ result }} verdict={{ verdict }} crit={{ crit }} warn={{ warn }} operators={{ operators }} pools={{ pools }} healthy={{ operators + pools - rows | length }}

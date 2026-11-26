@@ -1,0 +1,8 @@
+upgrade-gate report: ocp-lab
+CRIT co/insights NOSTATUS reason=-
+CRIT mcp/worker UNAVAILABLE degraded=0 unavailable=1 updated=3/3
+WARN co/dns PROGRESSING reason=DNSReconciling
+HINT UNAVAILABLE: operator Available is not True, or pool nodes are down outside a rollout: oc describe co/mcp, oc get nodes; do not upgrade until it is resolved
+HINT NOSTATUS: the operator reports no Available condition, so it is not reporting at all: check its pod and events in its own namespace
+HINT PROGRESSING: an operator is mid-rollout: wait for Progressing=False, or the upgrade stacks a second rollout on top
+RESULT CRIT verdict=NO-GO crit=2 warn=1 operators=8 pools=2 healthy=7

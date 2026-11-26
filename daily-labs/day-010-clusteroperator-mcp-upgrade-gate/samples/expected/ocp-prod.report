@@ -1,0 +1,15 @@
+upgrade-gate report: ocp-prod
+CRIT co/authentication DEGRADED reason=OAuthServerRouteEndpointAccessibleController_EndpointUnavailable
+CRIT co/cloud-credential BLOCKED reason=AdminAckRequired
+CRIT co/monitoring UNAVAILABLE reason=UpdatingPrometheusK8sFailed
+CRIT mcp/gpu STALLED degraded=0 unavailable=0 updated=3/4
+CRIT mcp/worker DEGRADED degraded=1 unavailable=1 updated=6/6
+WARN co/network PROGRESSING reason=Deploying
+WARN mcp/infra PAUSED degraded=0 unavailable=0 updated=2/3
+HINT UNAVAILABLE: operator Available is not True, or pool nodes are down outside a rollout: oc describe co/mcp, oc get nodes; do not upgrade until it is resolved
+HINT DEGRADED: Degraded=True: oc describe co/<name> for an operator, oc describe mcp plus machine-config-daemon logs for a pool; fix it before the upgrade
+HINT BLOCKED: Upgradeable=False blocks minor-version updates (patch updates still run): read the condition message, fix it or give the admin acknowledgement it asks for
+HINT STALLED: updated is below machineCount, the pool is not updating and not paused: it is stuck, check nodes for a stale desiredConfig and the machine-config-controller logs
+HINT PROGRESSING: an operator is mid-rollout: wait for Progressing=False, or the upgrade stacks a second rollout on top
+HINT PAUSED: spec.paused=true: the pool ignores new rendered configs and stays on the old version; unpause before the upgrade unless it is a deliberate canary
+RESULT CRIT verdict=NO-GO crit=5 warn=2 operators=10 pools=4 healthy=7

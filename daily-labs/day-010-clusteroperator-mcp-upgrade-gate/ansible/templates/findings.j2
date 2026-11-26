@@ -1,0 +1,80 @@
+{#- Judge every ClusterOperator and MachineConfigPool. Output is JSON: {rows, errors, operators, pools}. First error wins, like the other three tools. -#}
+{%- set ns = namespace(rows=[], errors=[]) -%}
+{%- set ok_status = ['True', 'False', 'Unknown'] -%}
+{%- set count_fields = ['machineCount', 'updatedMachineCount', 'readyMachineCount', 'unavailableMachineCount', 'degradedMachineCount'] -%}
+{%- set cos = cos_doc['items'] | selectattr('kind', 'defined') | selectattr('kind', 'equalto', 'ClusterOperator') | list -%}
+{%- set pools = mcps_doc['items'] | selectattr('kind', 'defined') | selectattr('kind', 'equalto', 'MachineConfigPool') | list -%}
+{%- for kind in ['clusteroperators', 'mcps'] -%}
+{%- for item in (cos if kind == 'clusteroperators' else pools) -%}
+{%- set n = (item['metadata'] | default({}, true))['name'] | default('') -%}
+{%- if n is not string or n == '' -%}
+{%- set _ = ns.errors.append(kind ~ ': item without metadata.name') -%}
+{%- else -%}
+{%- set st = item['status'] | default({}, true) -%}
+{%- set raw = st['conditions'] | default(none) -%}
+{%- set cm = namespace(c={}, bad=false, badlist=false) -%}
+{%- if raw is none -%}
+{%- elif raw is string or raw is not sequence -%}
+{%- set cm.badlist = true -%}
+{%- else -%}
+{%- for c in raw -%}
+{%- if c is mapping and c['type'] is defined and c['type'] is string and c['status'] is defined and c['status'] in ok_status -%}
+{%- set r = c['reason'] | default('') -%}
+{%- set _ = cm.c.update({c['type']: {'status': c['status'], 'reason': r if (r is string and r != '') else '-'}}) -%}
+{%- else -%}
+{%- set cm.bad = true -%}
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+{%- if cm.badlist -%}
+{%- set _ = ns.errors.append(kind ~ ': bad conditions in ' ~ n) -%}
+{%- elif cm.bad -%}
+{%- set _ = ns.errors.append(kind ~ ': bad condition status in ' ~ n) -%}
+{%- elif kind == 'clusteroperators' -%}
+{%- set c = cm.c -%}
+{%- set av = (c['Available'] | default({}))['status'] | default('') -%}
+{%- set subj = 'co/' ~ n -%}
+{%- if av == '' -%}
+{%- set _ = ns.rows.append({'rank': 0, 'subject': subj, 'cls': 'NOSTATUS', 'detail': 'reason=-'}) -%}
+{%- elif av != 'True' -%}
+{%- set _ = ns.rows.append({'rank': 0, 'subject': subj, 'cls': 'UNAVAILABLE', 'detail': 'reason=' ~ c['Available']['reason']}) -%}
+{%- elif (c['Degraded'] | default({}))['status'] | default('') == 'True' -%}
+{%- set _ = ns.rows.append({'rank': 0, 'subject': subj, 'cls': 'DEGRADED', 'detail': 'reason=' ~ c['Degraded']['reason']}) -%}
+{%- elif (c['Upgradeable'] | default({}))['status'] | default('') == 'False' -%}
+{%- set _ = ns.rows.append({'rank': 0, 'subject': subj, 'cls': 'BLOCKED', 'detail': 'reason=' ~ c['Upgradeable']['reason']}) -%}
+{%- elif (c['Progressing'] | default({}))['status'] | default('') == 'True' -%}
+{%- set _ = ns.rows.append({'rank': 1, 'subject': subj, 'cls': 'PROGRESSING', 'detail': 'reason=' ~ c['Progressing']['reason']}) -%}
+{%- endif -%}
+{%- else -%}
+{%- set bad = namespace(f='') -%}
+{%- for f in count_fields -%}
+{%- set v = st[f] | default(none) -%}
+{%- if bad.f == '' and not (v is number and v is not boolean and v >= 0 and v == (v | int)) -%}{%- set bad.f = f -%}{%- endif -%}
+{%- endfor -%}
+{%- if bad.f != '' -%}
+{%- set _ = ns.errors.append('mcps: bad ' ~ bad.f ~ ' in ' ~ n) -%}
+{%- else -%}
+{%- set c = cm.c -%}
+{%- set total = st['machineCount'] | int -%}
+{%- set upd = st['updatedMachineCount'] | int -%}
+{%- set un = st['unavailableMachineCount'] | int -%}
+{%- set dg = st['degradedMachineCount'] | int -%}
+{%- set subj = 'mcp/' ~ n -%}
+{%- set d = 'degraded=' ~ dg ~ ' unavailable=' ~ un ~ ' updated=' ~ upd ~ '/' ~ total -%}
+{%- if dg > 0 or (c['Degraded'] | default({}))['status'] | default('') == 'True' -%}
+{%- set _ = ns.rows.append({'rank': 0, 'subject': subj, 'cls': 'DEGRADED', 'detail': d}) -%}
+{%- elif (c['Updating'] | default({}))['status'] | default('') == 'True' -%}
+{%- set _ = ns.rows.append({'rank': 1, 'subject': subj, 'cls': 'UPDATING', 'detail': d}) -%}
+{%- elif un > 0 -%}
+{%- set _ = ns.rows.append({'rank': 0, 'subject': subj, 'cls': 'UNAVAILABLE', 'detail': d}) -%}
+{%- elif (item['spec'] | default({}, true))['paused'] | default(false) is sameas true -%}
+{%- set _ = ns.rows.append({'rank': 1, 'subject': subj, 'cls': 'PAUSED', 'detail': d}) -%}
+{%- elif upd < total -%}
+{%- set _ = ns.rows.append({'rank': 0, 'subject': subj, 'cls': 'STALLED', 'detail': d}) -%}
+{%- endif -%}
+{%- endif -%}
+{%- endif -%}
+{%- endif -%}
+{%- endfor -%}
+{%- endfor -%}
+{{ {'rows': ns.rows, 'errors': ns.errors, 'operators': cos | length, 'pools': pools | length} | to_json }}

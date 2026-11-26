@@ -54,7 +54,7 @@ Every scenario uses **offline fixtures** (saved `oc`/`kubectl` JSON, `nvidia-smi
 18. ✅ ResourceQuota / requests-vs-usage right-sizing report
 19. ✅ Node pressure & eviction analysis (memory/disk/PID pressure)
 20. ✅ PVC Pending / StorageClass binding-mode diagnosis
-21. OpenShift ClusterOperator & MachineConfigPool health gate (pre-upgrade check)
+21. ✅ OpenShift ClusterOperator & MachineConfigPool health gate (pre-upgrade check)
 22. Cluster upgrade pre-flight: deprecated APIs, PDBs blocking drains, unhealthy nodes
 23. Certificate expiry inside the cluster (secrets, kubelet, ingress)
 24. etcd backup verification & defrag decision (DB size, leader changes)

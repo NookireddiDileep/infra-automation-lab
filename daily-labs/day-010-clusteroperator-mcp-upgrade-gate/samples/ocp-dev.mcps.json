@@ -1,0 +1,89 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": ""
+  },
+  "items": [
+    {
+      "apiVersion": "machineconfiguration.openshift.io/v1",
+      "kind": "MachineConfigPool",
+      "metadata": {
+        "name": "master"
+      },
+      "spec": {
+        "paused": false,
+        "maxUnavailable": 1
+      },
+      "status": {
+        "machineCount": 3,
+        "updatedMachineCount": 3,
+        "readyMachineCount": 3,
+        "unavailableMachineCount": 0,
+        "degradedMachineCount": 0,
+        "conditions": [
+          {
+            "type": "Updated",
+            "status": "True",
+            "lastTransitionTime": "2026-11-20T06:00:00Z"
+          },
+          {
+            "type": "Updating",
+            "status": "False",
+            "lastTransitionTime": "2026-11-20T06:00:00Z"
+          },
+          {
+            "type": "Degraded",
+            "status": "False",
+            "lastTransitionTime": "2026-11-20T06:00:00Z"
+          },
+          {
+            "type": "NodeDegraded",
+            "status": "False",
+            "lastTransitionTime": "2026-11-20T06:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "machineconfiguration.openshift.io/v1",
+      "kind": "MachineConfigPool",
+      "metadata": {
+        "name": "worker"
+      },
+      "spec": {
+        "paused": false,
+        "maxUnavailable": 1
+      },
+      "status": {
+        "machineCount": 2,
+        "updatedMachineCount": 2,
+        "readyMachineCount": 2,
+        "unavailableMachineCount": 0,
+        "degradedMachineCount": 0,
+        "conditions": [
+          {
+            "type": "Updated",
+            "status": "True",
+            "lastTransitionTime": "2026-11-20T06:00:00Z"
+          },
+          {
+            "type": "Updating",
+            "status": "False",
+            "lastTransitionTime": "2026-11-20T06:00:00Z"
+          },
+          {
+            "type": "Degraded",
+            "status": "False",
+            "lastTransitionTime": "2026-11-20T06:00:00Z"
+          },
+          {
+            "type": "NodeDegraded",
+            "status": "False",
+            "lastTransitionTime": "2026-11-20T06:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

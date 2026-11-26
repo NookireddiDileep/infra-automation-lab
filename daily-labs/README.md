@@ -17,6 +17,7 @@ Every day there's one realistic infra scenario (RHEL ops → OpenShift/Kubernete
 | [007](day-007-quota-rightsizing-report/) | 2026-11-23 | ResourceQuota right-sizing: quota full vs padded requests vs real usage (FULL, NEAR, OVERQUOTA, OVER/UNDERREQUEST) | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
 | [008](day-008-node-pressure-eviction-analysis/) | 2026-11-24 | Node pressure & eviction analysis: Ready, Memory/Disk/PID pressure, missing taint, eviction storms by resource | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
 | [009](day-009-pvc-pending-storageclass-diagnosis/) | 2026-11-25 | PVC Pending diagnosis: missing vs empty class, WaitForFirstConsumer vs Immediate, no-provisioner, selected-node stuck, double default | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
+| [010](day-010-clusteroperator-mcp-upgrade-gate/) | 2026-11-26 | OpenShift pre-upgrade gate: ClusterOperators and MachineConfigPools (Degraded, Upgradeable=False, paused, stalled pools, GO / CAUTION / NO-GO) | 2 · OpenShift Day-2 | ✅✅✅✅ | ⬜ Bash |
 
 ### Folder convention
 ```

@@ -72,3 +72,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   Immediate binds as soon as the claim exists, ignoring where the pod will run; for zonal or local storage the volume can end up where the pod cannot be scheduled. WFFC waits for the scheduler's node choice, so the volume honours zone, affinity and taints. Platform baseline: WFFC for anything topology-bound.
 - **What is the difference between an absent `storageClassName` and an empty string?** (Daily 009)  
   Absent: admission fills in the default class (if any). `""`: no class on purpose, so only a pre-created PV without a class can satisfy it and nothing is provisioned. Confusing the two is a classic reason a claim hangs forever.
+- **What do you check before an OpenShift upgrade?** (Daily 010)  
+  ClusterVersion (channel, target, Upgradeable, Failing), every ClusterOperator Available and neither Degraded nor Progressing, every MachineConfigPool Updated with no degraded machines and no forgotten pause, nodes Ready, PDBs that would block drains, a fresh etcd backup. Snapshot the state so you can diff after.
+- **What does `Upgradeable=False` on a ClusterOperator mean?** (Daily 010)  
+  It blocks minor-version updates (for example 4.15 to 4.16), not z-stream ones. Usually an admin acknowledgement is required (removed APIs, credentials mode). Read the condition message, fix or acknowledge, and re-check.
+- **A MachineConfigPool shows updated 3/4 and nothing moves. What now?** (Daily 010)  
+  Not updating, not paused, not degraded means stuck. Find the node whose desiredConfig differs from currentConfig, read the machine-config-daemon log there and the controller log, and look for a drain blocked by a PDB.

@@ -1,0 +1,5 @@
+timesync report: node-03
+WARN offset 25.100ms fast (warn 10ms)
+WARN source ntp3.example.com unreachable (reach 0)
+WARN stratum 7 (max 5)
+RESULT WARN crit=0 warn=3 sources=3

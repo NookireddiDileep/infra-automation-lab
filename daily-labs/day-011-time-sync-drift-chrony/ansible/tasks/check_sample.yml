@@ -1,0 +1,15 @@
+---
+- name: "{{ case.key }}: check"
+  ansible.builtin.include_tasks: check.yml
+  vars:
+    inv_file: "{{ playbook_dir }}/../samples/{{ case.key }}.chrony"
+
+- name: "{{ case.key }}: report is byte-identical to the golden file and the result matches"
+  ansible.builtin.assert:
+    that:
+      - ts_report == golden
+      - ts_result == case.value
+    quiet: true
+    fail_msg: "{{ case.key }} differs from samples/expected\n--- got\n{{ ts_report }}--- want\n{{ golden }}"
+  vars:
+    golden: "{{ lookup('ansible.builtin.file', playbook_dir ~ '/../samples/expected/' ~ case.key ~ '.report') ~ nl }}"

@@ -1,0 +1,57 @@
+{# Inputs: text (inventory v1), warn_ms, crit_ms, re_leap, re_stratum, re_systime, re_source. Output: one JSON document. #}
+{% set ns = namespace(host='', section='', leap='', stratum='', off=-1, dir='', err='', lines=[], nsrc=0, sel=0) %}
+{% for raw in text.splitlines() %}
+{% if ns.err != '' %}
+{% elif raw.startswith('# host=') %}
+{% set ns.host = raw[7:] %}
+{% elif raw == '# chronyc tracking' %}
+{% set ns.section = 'tracking' %}
+{% elif raw == '# chronyc sources' %}
+{% set ns.section = 'sources' %}
+{% elif raw == '' or raw.startswith('#') %}
+{% elif ns.section == 'tracking' %}
+{% if raw is match('^Leap status *:') %}
+{% if raw is match(re_leap) %}{% set ns.leap = raw | regex_replace(re_leap, '\\1') %}{% else %}{% set ns.err = 'invalid line ' ~ loop.index %}{% endif %}
+{% elif raw is match('^Stratum *:') %}
+{% if raw is match(re_stratum) %}{% set ns.stratum = raw | regex_replace(re_stratum, '\\1') %}{% else %}{% set ns.err = 'invalid line ' ~ loop.index %}{% endif %}
+{% elif raw is match('^System time *:') %}
+{% if raw is match(re_systime) %}
+{% set g = raw | regex_search(re_systime, '\\1', '\\2', '\\3') %}
+{% set ns.off = (g[0] | int) * 1000000000 + (g[1] | int) %}
+{% set ns.dir = g[2] %}
+{% else %}{% set ns.err = 'invalid line ' ~ loop.index %}{% endif %}
+{% endif %}
+{% elif ns.section == 'sources' %}
+{% if raw.startswith('MS ') or raw is match('^=+$') %}
+{% elif raw is match(re_source) %}
+{% set f = raw.split() %}
+{% set ns.nsrc = ns.nsrc + 1 %}
+{% if f[0][1] == '*' %}{% set ns.sel = ns.sel + 1 %}{% endif %}
+{% if f[0][1] == 'x' %}{% set ns.lines = ns.lines + ['WARN source ' ~ f[1] ~ ' falseticker'] %}{% endif %}
+{% if f[4] is match('^0+$') %}{% set ns.lines = ns.lines + ['WARN source ' ~ f[1] ~ ' unreachable (reach 0)'] %}{% endif %}
+{% else %}{% set ns.err = 'invalid line ' ~ loop.index %}
+{% endif %}
+{% else %}
+{% set ns.err = 'invalid line ' ~ loop.index %}
+{% endif %}
+{% endfor %}
+{% if ns.err == '' and ns.host == '' %}{% set ns.err = "missing '# host=' header" %}{% endif %}
+{% if ns.err == '' and (ns.leap == '' or ns.stratum == '' or ns.off < 0) %}{% set ns.err = 'missing tracking fields' %}{% endif %}
+{% if ns.err == '' and ns.nsrc == 0 %}{% set ns.err = 'no sources' %}{% endif %}
+{% if ns.err == '' %}
+{% set us = ns.off // 1000 %}
+{% if ns.leap == 'Not synchronised' %}
+{# chrony still prints a stale offset and stratum 0 here; neither means anything #}
+{% set ns.lines = ns.lines + ['CRIT unsynchronised (leap status: ' ~ ns.leap ~ ')'] %}
+{% else %}
+{% if ns.off > (crit_ms | int) * 1000000 %}
+{% set ns.lines = ns.lines + ['CRIT offset ' ~ ('%d.%03dms' | format(us // 1000, us % 1000)) ~ ' ' ~ ns.dir ~ ' (crit ' ~ crit_ms ~ 'ms)'] %}
+{% elif ns.off > (warn_ms | int) * 1000000 %}
+{% set ns.lines = ns.lines + ['WARN offset ' ~ ('%d.%03dms' | format(us // 1000, us % 1000)) ~ ' ' ~ ns.dir ~ ' (warn ' ~ warn_ms ~ 'ms)'] %}
+{% endif %}
+{% if ns.stratum | int > 5 %}{% set ns.lines = ns.lines + ['WARN stratum ' ~ ns.stratum ~ ' (max 5)'] %}{% endif %}
+{% endif %}
+{% if ns.sel == 0 %}{% set ns.lines = ns.lines + ['WARN no selected source'] %}{% endif %}
+{% if ns.nsrc < 3 %}{% set ns.lines = ns.lines + ['WARN sources ' ~ ns.nsrc ~ ' (need at least 3 to out-vote a falseticker)'] %}{% endif %}
+{% endif %}
+{{ {'error': ns.err, 'host': ns.host, 'lines': ns.lines, 'sources': ns.nsrc} | to_json }}

@@ -78,3 +78,9 @@ Short answers you can say in 30 seconds. Every Saturday, cover the answers, say 
   It blocks minor-version updates (for example 4.15 to 4.16), not z-stream ones. Usually an admin acknowledgement is required (removed APIs, credentials mode). Read the condition message, fix or acknowledge, and re-check.
 - **A MachineConfigPool shows updated 3/4 and nothing moves. What now?** (Daily 010)  
   Not updating, not paused, not degraded means stuck. Find the node whose desiredConfig differs from currentConfig, read the machine-config-daemon log there and the controller log, and look for a drain blocked by a PDB.
+- **Services fail intermittently but nothing is down. How do you rule out clock skew?** (Daily 011)  
+  `chronyc tracking` (Leap status, System time, Stratum), `chronyc sources -v` (selected source, reach) and `timedatectl`. Compare hosts with each other, not just with your wall clock. Skew breaks etcd leases, Kerberos (5 min default), token and certificate validity, and distributed-training barriers, so alert on the offset per workload sensitivity.
+- **Why do you want at least three or four NTP sources per host?** (Daily 011)  
+  To out-vote a falseticker. With two sources chrony sees a disagreement but cannot tell which one is wrong; three give a majority, four still have one after a failure. Point the fleet at 3-4 internal servers that are themselves synced upstream, not the public pool from every node.
+- **A host reports `Leap status: Not synchronised`. What do you do?** (Daily 011)  
+  Reachability first: UDP 123 through the firewall, DNS for the server names, the Reach column in `chronyc sources` (0 means nothing answered), `journalctl -u chronyd`. Fix the path, and only if the offset is large use `chronyc makestep`, with the running workload in mind (stepping the clock under a database or etcd member is its own risk).

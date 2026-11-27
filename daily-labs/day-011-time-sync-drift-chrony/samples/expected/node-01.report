@@ -1,0 +1,4 @@
+timesync report: node-01
+CRIT offset 412.337ms slow (crit 100ms)
+WARN source ntp3.example.com falseticker
+RESULT CRIT crit=1 warn=1 sources=3

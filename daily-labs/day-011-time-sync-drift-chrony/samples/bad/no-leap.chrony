@@ -1,0 +1,22 @@
+# timesync inventory v1
+# host=node-02
+# chronyc tracking
+Reference ID    : C0A80A01 (ntp1.example.com)
+Stratum         : 2
+Ref time (UTC)  : Fri Nov 27 02:14:55 2026
+System time     : 0.010000000 seconds fast of NTP time
+Last offset     : +0.000000412 seconds
+RMS offset      : 0.000000812 seconds
+Frequency       : 12.345 ppm slow
+Residual freq   : +0.001 ppm
+Skew            : 0.512 ppm
+Root delay      : 0.001234567 seconds
+Root dispersion : 0.000456789 seconds
+Update interval : 1024.1 seconds
+# chronyc sources
+MS Name/IP address         Stratum Poll Reach LastRx Last sample
+===============================================================================
+^* ntp1.example.com              1  10   377    41    +35us[  +41us] +/-  812us
+^+ ntp2.example.com              1  10   377   402    -12us[  -20us] +/-  901us
+^- ntp3.example.com              2  10   377   215   +210us[ +210us] +/- 2310us
+^+ ntp4.example.com              1  10   377   133    +18us[  +25us] +/-  950us

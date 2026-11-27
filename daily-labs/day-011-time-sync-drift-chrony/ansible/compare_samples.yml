@@ -1,0 +1,33 @@
+---
+# Self-test: the Ansible report must be byte-identical to the golden files that Bash, Python and Go also match.
+- name: Compare against samples/expected
+  hosts: localhost
+  gather_facts: false
+  vars:
+    warn_ms: 10
+    crit_ms: 100
+    nl: "\n"
+    re_leap: '^Leap status *: *(.+)$'
+    re_stratum: '^Stratum *: *([0-9]+)$'
+    re_systime: '^System time *: *([0-9]+)\.([0-9]{9}) seconds (fast|slow) of NTP time$'
+    re_source: '^[=^]([*+?x~-]) +([^ ]+) +([0-9]+) +([0-9]+) +([0-7]+) +[^ ]+( .*)?$'
+    cases:
+      node-01: CRIT
+      node-02: OK
+      node-03: WARN
+      node-04: CRIT
+      node-05: WARN
+  tasks:
+    - name: Check and compare each sample
+      ansible.builtin.include_tasks: tasks/check_sample.yml
+      loop: "{{ cases | dict2items }}"
+      loop_control:
+        loop_var: case
+        label: "{{ case.key }}"
+
+    - name: Every bad inventory must be refused
+      ansible.builtin.include_tasks: tasks/refuse_bad.yml
+      loop: "{{ lookup('ansible.builtin.fileglob', playbook_dir ~ '/../samples/bad/*.chrony', wantlist=True) }}"
+      loop_control:
+        loop_var: bad_file
+        label: "{{ bad_file | basename }}"

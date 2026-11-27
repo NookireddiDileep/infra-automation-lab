@@ -1,0 +1,7 @@
+timesync report: node-04
+CRIT unsynchronised (leap status: Not synchronised)
+WARN no selected source
+WARN source ntp1.example.com unreachable (reach 0)
+WARN source ntp2.example.com unreachable (reach 0)
+WARN sources 2 (need at least 3 to out-vote a falseticker)
+RESULT CRIT crit=1 warn=4 sources=2

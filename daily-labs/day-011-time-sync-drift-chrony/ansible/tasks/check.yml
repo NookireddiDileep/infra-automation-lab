@@ -1,0 +1,34 @@
+---
+# in:  inv_file, warn_ms, crit_ms (+ nl, re_* from the play)
+# out: ts_report (byte-exact report text), ts_result (OK|WARN|CRIT), ts_host
+- name: Validate thresholds
+  ansible.builtin.assert:
+    that:
+      - warn_ms | int >= 0
+      - crit_ms | int > warn_ms | int
+    quiet: true
+    fail_msg: "timesync: --crit-ms must be higher than --warn-ms"
+
+- name: Evaluate {{ inv_file | basename }}
+  ansible.builtin.set_fact:
+    ts_eval: "{{ lookup('ansible.builtin.template', playbook_dir ~ '/templates/evaluate.j2') | from_json }}"
+  vars:
+    text: "{{ lookup('ansible.builtin.file', inv_file) }}"
+
+- name: Refuse a bad inventory
+  ansible.builtin.fail:
+    msg: "timesync: {{ ts_eval.error }} in {{ inv_file }}"
+  when: ts_eval.error != ''
+
+- name: Build the report
+  ansible.builtin.set_fact:
+    ts_host: "{{ ts_eval.host }}"
+    ts_result: "{{ 'CRIT' if crit_n | int > 0 else 'WARN' if warn_n | int > 0 else 'OK' }}"
+    ts_report: >-
+      {{ 'timesync report: ' ~ ts_eval.host ~ nl
+      ~ (ts_eval.lines | sort(case_sensitive=true) | map('regex_replace', '$', nl) | join)
+      ~ 'RESULT ' ~ ('CRIT' if crit_n | int > 0 else 'WARN' if warn_n | int > 0 else 'OK')
+      ~ ' crit=' ~ crit_n ~ ' warn=' ~ warn_n ~ ' sources=' ~ ts_eval.sources ~ nl }}
+  vars:
+    crit_n: "{{ ts_eval.lines | select('match', '^CRIT') | list | length }}"
+    warn_n: "{{ ts_eval.lines | select('match', '^WARN') | list | length }}"

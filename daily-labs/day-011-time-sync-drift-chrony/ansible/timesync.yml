@@ -1,0 +1,42 @@
+---
+# Audit every *.chrony inventory in inv_dir and write <host>.report to out_dir.
+#   ansible-playbook timesync.yml -e inv_dir=/var/lib/timesync -e fail_on_crit=true
+# Inventories come from `bash/timesync.sh collect` (or an ansible.builtin.command task on each host).
+- name: Chrony clock-drift audit
+  hosts: localhost
+  gather_facts: false
+  vars:
+    inv_dir: "{{ playbook_dir }}/../samples"
+    out_dir: "{{ playbook_dir }}/reports"
+    warn_ms: 10
+    crit_ms: 100
+    fail_on_crit: true
+    nl: "\n"
+    re_leap: '^Leap status *: *(.+)$'
+    re_stratum: '^Stratum *: *([0-9]+)$'
+    re_systime: '^System time *: *([0-9]+)\.([0-9]{9}) seconds (fast|slow) of NTP time$'
+    re_source: '^[=^]([*+?x~-]) +([^ ]+) +([0-9]+) +([0-9]+) +([0-7]+) +[^ ]+( .*)?$'
+  tasks:
+    - name: Create the report directory
+      ansible.builtin.file:
+        path: "{{ out_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Audit each inventory
+      ansible.builtin.include_tasks: tasks/run_one.yml
+      loop: "{{ lookup('ansible.builtin.fileglob', inv_dir ~ '/*.chrony', wantlist=True) | sort }}"
+      loop_control:
+        loop_var: inv_file
+        label: "{{ inv_file | basename }}"
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg: "{{ ts_results | map(attribute='host') | zip(ts_results | map(attribute='result')) | map('join', ': ') | list }}"
+
+    - name: Fail the run when any host is CRIT (gate a pipeline on it)
+      ansible.builtin.assert:
+        that: ts_results | selectattr('result', 'equalto', 'CRIT') | list | length == 0
+        fail_msg: "CRIT clock state on: {{ ts_results | selectattr('result', 'equalto', 'CRIT') | map(attribute='host') | join(', ') }}"
+        quiet: true
+      when: fail_on_crit | bool

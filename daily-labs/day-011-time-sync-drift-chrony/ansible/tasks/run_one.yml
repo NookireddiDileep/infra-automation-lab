@@ -1,0 +1,13 @@
+---
+- name: Audit {{ inv_file | basename }}
+  ansible.builtin.include_tasks: check.yml
+
+- name: Write the report (idempotent - unchanged content reports ok, not changed)
+  ansible.builtin.copy:
+    content: "{{ ts_report }}"
+    dest: "{{ out_dir }}/{{ ts_host }}.report"
+    mode: "0644"
+
+- name: Remember the result
+  ansible.builtin.set_fact:
+    ts_results: "{{ ts_results | default([]) + [{'host': ts_host, 'result': ts_result}] }}"
